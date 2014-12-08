@@ -49,8 +49,11 @@ int main() {
 	cvWaitKey(80);
 
 	Dynamixel::init();
-	for (int i = 1; i < 21; i++) {
+	for (int i = 1; i < 13; i++) {
 		Dynamixel::setMotorPosition(i, 0.0, 50);
+		Dynamixel::setSyncwriteEachLength(4);
+		Dynamixel::setSyncwriteStartAddress(30);
+		Dynamixel::sendSyncWrite();
 //		Dynamixel::enableMotor(i);
 	}
 
@@ -60,6 +63,8 @@ int main() {
 		double theta_hip = acos(((((double)right_leg_length*(double)right_leg_length) + 70)/(37*(double)right_leg_length)));
 		double theta_foot = acos((((double)right_leg_length*(double)right_leg_length) - 70)/(33*(double)right_leg_length));
 		std::cout << "Moving Knee to angle: " << theta_knee << std::endl;
+		Dynamixel::setSyncwriteEachLength(4);
+		Dynamixel::setSyncwriteStartAddress(30);
 		Dynamixel::setMotorPosition(3, theta_hip, 100);
 		Dynamixel::setMotorPosition(7, theta_knee, 100);
 		Dynamixel::setMotorPosition(9, theta_foot, 100);
@@ -72,6 +77,8 @@ int main() {
 		Dynamixel::setMotorPosition(4, theta_hip, 100);
 		Dynamixel::setMotorPosition(8, theta_knee, 100);
 		Dynamixel::setMotorPosition(10, theta_foot, 100);
+
+		Dynamixel::sendSyncWrite();
 
 	}
 }
