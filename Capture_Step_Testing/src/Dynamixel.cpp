@@ -9,6 +9,7 @@
 #include "dynamixel.h"
 #include <iostream>
 #include <vector>
+#include <ctime>
 
 #define P_GOAL_POSITION		30
 #define P_MOVING_SPEED		32
@@ -17,8 +18,8 @@
 
 #define PI 3.14159265
 
-int initial_poses[] = {650, 3436, 1065, 2029,
-		2495, 2159, 503, 1548, 2588, 1051,
+int initial_poses[] = {650, 3436, 1005, 2079,
+		2495, 2159, 503, 1548, 2638, 1101,
 		1992, 1058
 };
 
@@ -162,13 +163,13 @@ void Dynamixel::enableMotor(int motor) {
 
 
 bool Dynamixel::addToSyncwrite(int id, std::vector<int> newData) {
-	std::cout << "Adding ID " << id << ": ";
+	//std::cout << "Adding ID " << id << ": ";
 	ids.push_back(id);
 	for (unsigned i = 0; i < newData.size(); i++) {
 		data.push_back(newData[i]);
-		std::cout << newData[i] << " ";
+		//std::cout << newData[i] << " ";
 	}
-	std::cout << std::endl;
+	//std::cout << std::endl;
 	return true;
 }
 
@@ -186,9 +187,9 @@ bool Dynamixel::sendSyncWrite() {
     int idsLength= ids.size();
 
     for (unsigned i = 0; i < data.size(); i++) {
-    	std::cout << data[i] << " ";
+    	//std::cout << data[i] << " ";
     }
-    std::cout << std::endl;
+   // std::cout << std::endl;
 
      dxl_set_txpacket_id(BROADCAST_ID);//ID of destination
      dxl_set_txpacket_instruction(INST_SYNC_WRITE);// packet type
@@ -199,13 +200,13 @@ bool Dynamixel::sendSyncWrite() {
      {
              // Set the ID number
              dxl_set_txpacket_parameter(2+(each_length+1)*i, ids[i]);
-             std::cout << "ID " << ids[i] << ": ";
+             //std::cout << "ID " << ids[i] << ": ";
              // Set the data values
              for (int j = 1; j < each_length+1; j++) {
             	 dxl_set_txpacket_parameter(2+(each_length+1)*i + j, data[(each_length)*i + (j-1)]);
-            	 std::cout << data[(each_length) * i + j-1] << " ";
+            	 //std::cout << data[(each_length) * i + j-1] << " ";
              }
-             std::cout << std::endl;
+             //std::cout << std::endl;
 //             if (each_length == 1) {
 //                     dxl_set_txpacket_parameter(2+2*i+1, data[i]);
 //             }
@@ -215,7 +216,7 @@ bool Dynamixel::sendSyncWrite() {
 //                     dxl_set_txpacket_parameter(2+3*i+2, data[2*i + 1]);
 //             }
      }
- 	std::cout << "made it here" << std::endl;
+ 	//std::cout << "made it here" << std::endl;
 
      dxl_set_txpacket_length((each_length+1)*idsLength+4);//(2+1) for writing a word, (1+1) for writing a byte, 4 is a constant
 
