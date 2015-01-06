@@ -87,6 +87,9 @@ void Dynamixel::init() {
 		else if (it->first == "motor_12_zero") {
 			std::istringstream(it->second) >> pos[11];
 		}
+
+//	for (int i = 0; i < 12; i++) {
+//		pos[i] = dxl_read_word(i+1, 36);
 	}
 	cvCreateTrackbar("Motor 1", "Initial Positions", &pos[0], 4095, NULL);
 	cvCreateTrackbar("Motor 2", "Initial Positions", &pos[1], 4095, NULL);
@@ -119,7 +122,7 @@ void Dynamixel::saveConfig() {
 	std::ofstream out("src/config.ini");
 	out << config;
 	out.close();
-	init();
+//	init();
 }
 
 void Dynamixel::close() {
