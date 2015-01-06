@@ -22,6 +22,7 @@ namespace Dynamixel {
 	bool setSyncwriteStartAddress(int startAddress);
 	bool setSyncwriteEachLength(int eachLength);
 	bool sendSyncWrite();
+	void saveConfig();
 }
 
 #endif /* DYNAMIXEL_H_ */

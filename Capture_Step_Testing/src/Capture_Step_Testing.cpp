@@ -92,15 +92,18 @@ int main() {
 			left_leg_values[i] = getLegThetas((double)LEG_CENTER - (double)(amplitude/20.0)*sin_values[i]);
 		}
 	}
-	while (cvWaitKey(80) != 'c') {
+	char wait_key = (char)cvWaitKey(80);
+	while (wait_key != 'c') {
 		// Check to see if it's been long enough to update the motor positions
 		// Taking 20 discrete moments along the sine curve yields the 5/freq.
 		// As the freq is on a scale from 0 - 100, with 100 corresponding to 1 Hz.
 		double ellapsed_time = getUnixTime()-last_clock;
 		if (ellapsed_time > 1.0/(((double)frequency)/*16*/)) {
-			std::cout << "Ellpased Time should be: " << 1.0/(((double)frequency)/*(double)sin_values.size()*/);
-			std::cout << "\t Ellapsed Time is: " << ellapsed_time << std::endl;
-			std::cout << "Iteration: " << current_sin_index << std::endl;
+//		if (wait_key == 'n') {
+
+//			std::cout << "Ellpased Time should be: " << 1.0/(((double)frequency)/*(double)sin_values.size()*/);
+//			std::cout << "\t Ellapsed Time is: " << ellapsed_time << std::endl;
+//			std::cout << "Iteration: " << current_sin_index << std::endl;
 			Dynamixel::setSyncwriteEachLength(4);
 			Dynamixel::setSyncwriteStartAddress(30);
 			std::vector<double> rightLegValues = getLegThetas((double)LEG_CENTER + (double)(amplitude/20.0)*sin_values[current_sin_index]);
@@ -161,7 +164,13 @@ int main() {
 			last_clock = getUnixTime();
 		}
 
-		Dynamixel::sendSyncWrite();
+		else if (wait_key == 's') {
+			Dynamixel::saveConfig();
+			std::cout << "Saved Config!" << std::endl;
+		}
+
+		wait_key = (char)cvWaitKey(80);
+//		Dynamixel::sendSyncWrite();
 
 	}
 }
