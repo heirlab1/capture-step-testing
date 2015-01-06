@@ -12,6 +12,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include <math.h>
 #include <ctime>
+#include <stdio.h>
 
 using namespace cv;
 
@@ -21,7 +22,7 @@ using namespace cv;
 std::vector<double> sin_values;
 std::vector<std::vector<double> > left_leg_values;
 std::vector<std::vector<double> > right_leg_values;
-int frequency = 200;
+int frequency = 12;
 int amplitude = 5;
 int samples = 16;
 double last_clock = 0;
@@ -87,10 +88,9 @@ int main() {
 	for (int i = 0; i < last_sin_size; i++) {
 		right_leg_values[i].resize(3);
 		left_leg_values[i].resize(3);
-		for (int j = 0; j < 3; j++) {
-			right_leg_values[i] = getLegThetas((double)LEG_CENTER + (double)(amplitude/20.0)*sin_values[i]);
-			left_leg_values[i] = getLegThetas((double)LEG_CENTER - (double)(amplitude/20.0)*sin_values[i]);
-		}
+		right_leg_values[i] = getLegThetas((double)LEG_CENTER + (double)(amplitude/20.0)*sin_values[i]);
+		left_leg_values[i] = getLegThetas((double)LEG_CENTER - (double)(amplitude/20.0)*sin_values[i]);
+//		printf("Right Leg Values for %i: %f, %f, %f\n", i, right_leg_values[i][HIP], right_leg_values[i][KNEE], right_leg_values[i][ANKLE]);
 	}
 	char wait_key = (char)cvWaitKey(80);
 	while (wait_key != 'c') {
@@ -101,43 +101,43 @@ int main() {
 		if (ellapsed_time > 1.0/(((double)frequency)/*16*/)) {
 //		if (wait_key == 'n') {
 
-//			std::cout << "Ellpased Time should be: " << 1.0/(((double)frequency)/*(double)sin_values.size()*/);
-//			std::cout << "\t Ellapsed Time is: " << ellapsed_time << std::endl;
-//			std::cout << "Iteration: " << current_sin_index << std::endl;
+			std::cout << "Ellpased Time should be: " << 1.0/(((double)frequency)/*(double)sin_values.size()*/);
+			std::cout << "\t Ellapsed Time is: " << ellapsed_time << std::endl;
+			std::cout << "Iteration: " << current_sin_index << std::endl;
 			Dynamixel::setSyncwriteEachLength(4);
 			Dynamixel::setSyncwriteStartAddress(30);
-			std::vector<double> rightLegValues = getLegThetas((double)LEG_CENTER + (double)(amplitude/20.0)*sin_values[current_sin_index]);
-			std::vector<double> leftLegValues = getLegThetas((double)LEG_CENTER - (double)(amplitude/20.0)*sin_values[current_sin_index]);
+//			std::vector<double> rightLegValues = getLegThetas((double)LEG_CENTER + (double)(amplitude/20.0)*sin_values[current_sin_index]);
+//			std::vector<double> leftLegValues = getLegThetas((double)LEG_CENTER - (double)(amplitude/20.0)*sin_values[current_sin_index]);
 			if (current_sin_index < 11 && current_sin_index > 3) {
-				Dynamixel::setMotorPosition(3, rightLegValues[HIP] + ((double)fudge_factor/1000.0), 400);
-//				Dynamixel::setMotorPosition(3, right_leg_values[current_sin_index][HIP] + ((double)fudge_factor/1000.0), 500);
-				Dynamixel::setMotorPosition(9, rightLegValues[ANKLE] - ((double)fudge_factor/1000.0), 400);
-//				Dynamixel::setMotorPosition(9, right_leg_values[current_sin_index][ANKLE] + ((double)fudge_2/1000.0), 500);
+//				Dynamixel::setMotorPosition(3, rightLegValues[HIP] + ((double)fudge_factor/1000.0), 400);
+				Dynamixel::setMotorPosition(3, right_leg_values[current_sin_index][HIP] + ((double)fudge_factor/1000.0), 500);
+//				Dynamixel::setMotorPosition(9, rightLegValues[ANKLE] - ((double)fudge_factor/1000.0), 400);
+				Dynamixel::setMotorPosition(9, right_leg_values[current_sin_index][ANKLE] + ((double)fudge_2/1000.0), 500);
 			}
 			else {
-				Dynamixel::setMotorPosition(3, rightLegValues[HIP] - ((double)fudge_factor/1000.0), 250);
-//				Dynamixel::setMotorPosition(3, right_leg_values[current_sin_index][HIP], 500);
-				Dynamixel::setMotorPosition(9, rightLegValues[ANKLE] + ((double)fudge_factor/1000.0), 250);
-//				Dynamixel::setMotorPosition(9, right_leg_values[current_sin_index][ANKLE], 500);
+//				Dynamixel::setMotorPosition(3, rightLegValues[HIP] - ((double)fudge_factor/1000.0), 250);
+				Dynamixel::setMotorPosition(3, right_leg_values[current_sin_index][HIP], 500);
+//				Dynamixel::setMotorPosition(9, rightLegValues[ANKLE] + ((double)fudge_factor/1000.0), 250);
+				Dynamixel::setMotorPosition(9, right_leg_values[current_sin_index][ANKLE], 500);
 			}
-//			Dynamixel::setMotorPosition(7, right_leg_values[current_sin_index][KNEE], 500);
-			Dynamixel::setMotorPosition(7, rightLegValues[KNEE], 500);
+			Dynamixel::setMotorPosition(7, right_leg_values[current_sin_index][KNEE], 500);
+//			Dynamixel::setMotorPosition(7, rightLegValues[KNEE], 500);
 
 
 			if (current_sin_index > 11 || current_sin_index < 3) {
-				Dynamixel::setMotorPosition(4, leftLegValues[HIP] + ((double)fudge_factor/1000.0), 400);
-//				Dynamixel::setMotorPosition(4, left_leg_values[current_sin_index][HIP] + ((double)fudge_factor/1000.0), 500);
-				Dynamixel::setMotorPosition(10,leftLegValues[ANKLE] - ((double)fudge_factor/1000.0), 400);
-//				Dynamixel::setMotorPosition(10,left_leg_values[current_sin_index][ANKLE] + ((double)fudge_2/1000.0), 500);
+//				Dynamixel::setMotorPosition(4, leftLegValues[HIP] + ((double)fudge_factor/1000.0), 400);
+				Dynamixel::setMotorPosition(4, left_leg_values[current_sin_index][HIP] + ((double)fudge_factor/1000.0), 500);
+//				Dynamixel::setMotorPosition(10,leftLegValues[ANKLE] - ((double)fudge_factor/1000.0), 400);
+				Dynamixel::setMotorPosition(10,left_leg_values[current_sin_index][ANKLE] + ((double)fudge_2/1000.0), 500);
 			}
 			else {
-				Dynamixel::setMotorPosition(4, leftLegValues[HIP] - ((double)fudge_factor/1000.0), 250);
-//				Dynamixel::setMotorPosition(4, left_leg_values[current_sin_index][HIP], 500);
-				Dynamixel::setMotorPosition(10,leftLegValues[ANKLE] + ((double)fudge_factor/1000.0), 250);
-//				Dynamixel::setMotorPosition(10,left_leg_values[current_sin_index][ANKLE], 500);
+//				Dynamixel::setMotorPosition(4, leftLegValues[HIP] - ((double)fudge_factor/1000.0), 250);
+				Dynamixel::setMotorPosition(4, left_leg_values[current_sin_index][HIP], 500);
+//				Dynamixel::setMotorPosition(10,leftLegValues[ANKLE] + ((double)fudge_factor/1000.0), 250);
+				Dynamixel::setMotorPosition(10,left_leg_values[current_sin_index][ANKLE], 500);
 			}
-			Dynamixel::setMotorPosition(8, leftLegValues[KNEE], 500);
-//			Dynamixel::setMotorPosition(8, left_leg_values[current_sin_index][KNEE], 500);
+//			Dynamixel::setMotorPosition(8, leftLegValues[KNEE], 500);
+			Dynamixel::setMotorPosition(8, left_leg_values[current_sin_index][KNEE], 500);
 
 			double ankle_theta = 0.1 * atan((double)amplitude*sin_values[current_sin_index]/6.0);
 			Dynamixel::setMotorPosition(11, -1*ankle_theta, 500);
@@ -159,6 +159,10 @@ int main() {
 
 			current_sin_index = (current_sin_index++) % samples;
 
+			if (current_sin_index == 16) {
+				current_sin_index = 0;
+			}
+
 //			std::cout << "Iteration: " << current_sin_index << std::endl;
 
 			last_clock = getUnixTime();
@@ -169,7 +173,7 @@ int main() {
 			std::cout << "Saved Config!" << std::endl;
 		}
 
-		wait_key = (char)cvWaitKey(80);
+		wait_key = (char)cvWaitKey(1);
 //		Dynamixel::sendSyncWrite();
 
 	}
