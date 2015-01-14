@@ -13,11 +13,13 @@
 #include <math.h>
 #include <ctime>
 #include <stdio.h>
+//#include "config_parser.h"
+#include <sstream>
 
 using namespace cv;
 
 #define PI 3.14159265
-#define LEG_CENTER 32
+int LEG_CENTER = 32;
 
 std::vector<double> sin_values;
 std::vector<std::vector<double> > left_leg_values;
@@ -26,9 +28,11 @@ int frequency = 12;
 int amplitude = 5;
 int samples = 16;
 double last_clock = 0;
-int fudge_factor = 92;
+int fudge_factor = 97;
 int fudge_2 = 0;
 int ankle_sway_percentage = 25;
+
+//configuration::data main_config;
 
 bool testing = true;
 
@@ -36,6 +40,8 @@ enum THETAS {HIP = 0, KNEE = 1, ANKLE = 2};
 
 double getUnixTime(void);
 std::vector<double> getLegThetas(double legLength);
+void loadConfigs();
+void saveConfigs();
 
 
 int main() {
@@ -63,6 +69,7 @@ int main() {
 	cvCreateTrackbar("Fudge Factor HIPS", "Ball", &fudge_factor, 1000, NULL);
 	cvCreateTrackbar("Fudge Factor ANKLES", "Ball", &fudge_2, 1000, NULL);
 	cvCreateTrackbar("Ankle SWAY", "Ball", &ankle_sway_percentage, 1000, NULL);
+	cvCreateTrackbar("Zero Distance", "Ball", &LEG_CENTER, 34, NULL);
 	//	}
 
 	cvWaitKey(80);
@@ -111,40 +118,41 @@ int main() {
 //				std::cout << "Iteration: " << current_sin_index << std::endl;
 				Dynamixel::setSyncwriteEachLength(4);
 				Dynamixel::setSyncwriteStartAddress(30);
-				//			std::vector<double> rightLegValues = getLegThetas((double)LEG_CENTER + (double)(amplitude/20.0)*sin_values[current_sin_index]);
-				//			std::vector<double> leftLegValues = getLegThetas((double)LEG_CENTER - (double)(amplitude/20.0)*sin_values[current_sin_index]);
+//							std::vector<double> rightLegValues = getLegThetas((double)LEG_CENTER + (double)(amplitude/20.0)*sin_values[current_sin_index]);
+//							std::vector<double> leftLegValues = getLegThetas((double)LEG_CENTER - (double)(amplitude/20.0)*sin_values[current_sin_index]);
+							printf("Amplitude: %i\n", amplitude);
 				if (current_sin_index < 11 && current_sin_index > 3) {
-					//				Dynamixel::setMotorPosition(3, rightLegValues[HIP] + ((double)fudge_factor/1000.0), 400);
+//									Dynamixel::setMotorPosition(3, rightLegValues[HIP] + ((double)fudge_factor/1000.0), 400);
 					Dynamixel::setMotorPosition(3, right_leg_values[current_sin_index][HIP] + ((double)fudge_factor/1000.0), 500);
-					//				Dynamixel::setMotorPosition(9, rightLegValues[ANKLE] - ((double)fudge_factor/1000.0), 400);
+//									Dynamixel::setMotorPosition(9, rightLegValues[ANKLE] - ((double)fudge_factor/1000.0), 400);
 					Dynamixel::setMotorPosition(9, right_leg_values[current_sin_index][ANKLE] + ((double)fudge_2/1000.0), 500);
 				}
 				else {
-					//				Dynamixel::setMotorPosition(3, rightLegValues[HIP] - ((double)fudge_factor/1000.0), 250);
+//									Dynamixel::setMotorPosition(3, rightLegValues[HIP] - ((double)fudge_factor/1000.0), 250);
 					Dynamixel::setMotorPosition(3, right_leg_values[current_sin_index][HIP], 500);
-					//				Dynamixel::setMotorPosition(9, rightLegValues[ANKLE] + ((double)fudge_factor/1000.0), 250);
+//									Dynamixel::setMotorPosition(9, rightLegValues[ANKLE] + ((double)fudge_factor/1000.0), 250);
 					Dynamixel::setMotorPosition(9, right_leg_values[current_sin_index][ANKLE], 500);
 				}
 				Dynamixel::setMotorPosition(7, right_leg_values[current_sin_index][KNEE], 500);
-				//			Dynamixel::setMotorPosition(7, rightLegValues[KNEE], 500);
+//							Dynamixel::setMotorPosition(7, rightLegValues[KNEE], 500);
 
 
 				if (current_sin_index > 11 || current_sin_index < 3) {
-					//				Dynamixel::setMotorPosition(4, leftLegValues[HIP] + ((double)fudge_factor/1000.0), 400);
+//									Dynamixel::setMotorPosition(4, leftLegValues[HIP] + ((double)fudge_factor/1000.0), 400);
 					Dynamixel::setMotorPosition(4, left_leg_values[current_sin_index][HIP] + ((double)fudge_factor/1000.0), 500);
-					//				Dynamixel::setMotorPosition(10,leftLegValues[ANKLE] - ((double)fudge_factor/1000.0), 400);
+//									Dynamixel::setMotorPosition(10,leftLegValues[ANKLE] - ((double)fudge_factor/1000.0), 400);
 					Dynamixel::setMotorPosition(10,left_leg_values[current_sin_index][ANKLE] + ((double)fudge_2/1000.0), 500);
 				}
 				else {
-					//				Dynamixel::setMotorPosition(4, leftLegValues[HIP] - ((double)fudge_factor/1000.0), 250);
+//									Dynamixel::setMotorPosition(4, leftLegValues[HIP] - ((double)fudge_factor/1000.0), 250);
 					Dynamixel::setMotorPosition(4, left_leg_values[current_sin_index][HIP], 500);
-					//				Dynamixel::setMotorPosition(10,leftLegValues[ANKLE] + ((double)fudge_factor/1000.0), 250);
+//									Dynamixel::setMotorPosition(10,leftLegValues[ANKLE] + ((double)fudge_factor/1000.0), 250);
 					Dynamixel::setMotorPosition(10,left_leg_values[current_sin_index][ANKLE], 500);
 				}
-				//			Dynamixel::setMotorPosition(8, leftLegValues[KNEE], 500);
+//							Dynamixel::setMotorPosition(8, leftLegValues[KNEE], 500);
 				Dynamixel::setMotorPosition(8, left_leg_values[current_sin_index][KNEE], 500);
 
-				printf("Ankle SWAY: %f\n", ((double)ankle_sway_percentage/1000.0));
+//				printf("Ankle SWAY: %f\n", ((double)ankle_sway_percentage/1000.0));
 				double ankle_theta = ((double)ankle_sway_percentage/1000.0) * atan((double)amplitude*sin_values[current_sin_index]/6.0);
 				Dynamixel::setMotorPosition(11, -1*ankle_theta, 500);
 				Dynamixel::setMotorPosition(12, ankle_theta, 500);
@@ -216,4 +224,28 @@ double getUnixTime() {
 	}
 
 	return (((double)tv.tv_sec) + (tv.tv_nsec / 1000000000.0));
+}
+
+void loadConfigs() {
+//	std::ifstream f("src/main_config.ini");
+//	f >> main_config;
+//	f.close();
+//
+//	std::istringstream(main_config["frequency"]) >> frequency;
+//	std::istringstream(main_config["amplitude"]) >> amplitude;
+//	std::istringstream(main_config["samples"]) >> samples;
+//	std::istringstream(main_config["fudge_factor"]) >> fudge_factor;
+//	std::istringstream(main_config["fudge_2"]) >> fudge_2;
+//	std::istringstream(main_config["ankle_sway_percentage"]) >> ankle_sway_percentage;
+}
+
+void saveConfig() {
+//		std::ostringstream value_convert;
+//		value_convert << frequency;
+//		config["frequency"] =  value_convert.str();
+//
+//
+//	std::ofstream out("src/config.ini");
+//	out << config;
+//	out.close();
 }
