@@ -8,7 +8,7 @@
 
 namespace configuration
   {
-
+/*
   //---------------------------------------------------------------------------
   // The configuration::data is a simple map string (key, value) pairs.
   // The file is stored as a simple listing of those pairs, one per line.
@@ -23,7 +23,7 @@ namespace configuration
   //
   // Notice that the configuration file format does not permit values to span
   // more than one line, commentary at the end of a line, or [section]s.
-  //
+  // */
   struct data: std::map <std::string, std::string>
     {
     // Here is a little convenience method...
@@ -32,11 +32,11 @@ namespace configuration
       return count( s ) != 0;
       }
     };
-
+/*
   //---------------------------------------------------------------------------
   // The extraction operator reads configuration::data until EOF.
   // Invalid data is ignored.
-  //
+  /*/
   std::istream& operator >> ( std::istream& ins, data& d )
     {
     std::string s, key, value;
