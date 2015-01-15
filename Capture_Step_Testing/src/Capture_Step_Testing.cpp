@@ -86,6 +86,7 @@ int main() {
 
 	Dynamixel::setMotorPosition(16, 0.0, 25);
 	Dynamixel::setMotorPosition(15, 0.0, 25);
+	Dynamixel::setMotorPosition(24, 0.0, 25);
 	Dynamixel::setSyncwriteEachLength(4);
 	Dynamixel::setSyncwriteStartAddress(30);
 	Dynamixel::sendSyncWrite();
