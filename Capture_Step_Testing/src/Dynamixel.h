@@ -13,7 +13,7 @@
 
 namespace Dynamixel {
 	void init();
-	void setMotorPosition(int, double, int);
+	void setMotorPosition(int, double, int, double);
 	void setMotorPositionInt(int, int);
 	void enableMotor(int);
 	int getZeroPose(int);

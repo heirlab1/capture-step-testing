@@ -28,7 +28,7 @@ int initial_poses[] = {650, 3436, 1005, 2079,
 		1992, 1058
 };
 
-int pos[12];
+int pos[14];
 
 configuration::data config;
 
@@ -91,6 +91,8 @@ void Dynamixel::init() {
 //	for (int i = 0; i < 12; i++) {
 //		pos[i] = dxl_read_word(i+1, 36);
 	}
+	pos[12] = getZeroPose(13);
+	pos[13] = getZeroPose(14);
 	cvCreateTrackbar("Motor 1", "Initial Positions", &pos[0], 4095, NULL);
 	cvCreateTrackbar("Motor 2", "Initial Positions", &pos[1], 4095, NULL);
 	cvCreateTrackbar("Motor 3", "Initial Positions", &pos[2], 4095, NULL);
@@ -144,9 +146,11 @@ void Dynamixel::setMotorPositionInt(int motor, int position) {
 	dxl_write_word(motor, P_GOAL_POSITION, position);
 }
 
-void Dynamixel::setMotorPosition(int motor, double angle, int speed = 75) {
+void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double time = -1) {
 	// Convert angle to motor positions
 	int motor_positions = (int)(angle/(2.0*PI) * 4096.0);
+	int present_position = dxl_read_word(motor, P_PRESENT_POSITION);
+	int goal_position = 0;
 	//	std::cout << "Motor " << motor << ": " << motor_positions << std::endl;
 	int zero_position = getZeroPose(motor);
 	std::vector<int> newData;
@@ -154,6 +158,7 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = 75) {
 	case 1:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position + motor_positions);
+		goal_position = zero_position + motor_positions;
 		newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
 		newData.push_back(dxl_get_highbyte(zero_position + motor_positions));
 		//		addToSyncwrite(motor, data);
@@ -161,66 +166,77 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = 75) {
 	case 2:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position - motor_positions);
+		goal_position = zero_position - motor_positions;
 		newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
 		newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
 		break;
 	case 3:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position + motor_positions);
+		goal_position = zero_position + motor_positions;
 		newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
 		newData.push_back(dxl_get_highbyte(zero_position + motor_positions));
 		break;
 	case 4:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position - motor_positions);
+		goal_position = zero_position - motor_positions;
 		newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
 		newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
 		break;
 	case 5:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position - motor_positions);
+		goal_position = zero_position - motor_positions;
 		newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
 		newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
 		break;
 	case 6:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position + motor_positions);
+		goal_position = zero_position + motor_positions;
 		newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
 		newData.push_back(dxl_get_highbyte(zero_position + motor_positions));
 		break;
 	case 7:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position + motor_positions);
+		goal_position = zero_position + motor_positions;
 		newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
 		newData.push_back(dxl_get_highbyte(zero_position + motor_positions));
 		break;
 	case 8:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position - motor_positions);
+		goal_position = zero_position - motor_positions;
 		newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
 		newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
 		break;
 	case 9:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position + motor_positions);
+		goal_position = zero_position + motor_positions;
 		newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
 		newData.push_back(dxl_get_highbyte(zero_position + motor_positions));
 		break;
 	case 10:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position + motor_positions);
+		goal_position = zero_position + motor_positions;
 		newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
 		newData.push_back(dxl_get_highbyte(zero_position + motor_positions));
 		break;
 	case 11:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position + motor_positions);
+		goal_position = zero_position + motor_positions;
 		newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
 		newData.push_back(dxl_get_highbyte(zero_position + motor_positions));
 		break;
 	case 12:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position - motor_positions);
+		goal_position = zero_position - motor_positions;
 		newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
 		newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
 		break;
@@ -244,6 +260,21 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = 75) {
 	case 20:
 		break;*/
 	}
+	if (speed == -1) {
+		// Calculate speed from present position
+		if (goal_position < present_position) {
+			speed = (int)(((double)present_position - goal_position) / (time * 1.5) * 60.0 / 4096.0 / 0.114);
+		}
+		else {
+			speed =(int) (((double)goal_position - present_position) / (time * 1.5) * 60.0 / 4096.0 / 0.114);
+		}
+		if (speed > 1023) {
+			speed = 1023;
+			printf("\t");
+		}
+		printf("Motor %d position set to: %d, speed set to: %d\n",motor, goal_position, speed);
+	}
+
 	newData.push_back(dxl_get_lowbyte(speed));
 	newData.push_back(dxl_get_highbyte(speed));
 
