@@ -272,7 +272,7 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 			speed = 1023;
 			printf("\t");
 		}
-		printf("Motor %d position set to: %d, speed set to: %d\n",motor, goal_position, speed);
+//		printf("Motor %d position set to: %d, speed set to: %d\n",motor, goal_position, speed);
 	}
 
 	newData.push_back(dxl_get_lowbyte(speed));
