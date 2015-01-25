@@ -25,8 +25,8 @@ int LEG_CENTER = 32;
 std::vector<double> sin_values;
 std::vector<std::vector<double> > left_leg_values;
 std::vector<std::vector<double> > right_leg_values;
-int frequency = 500;
-int amplitude = 5;
+int frequency = 80;
+int amplitude = 4;
 int samples = 64;
 int height = 22;
 double last_clock = 0;
@@ -139,7 +139,7 @@ int main() {
 					Dynamixel::setMotorPosition(12,legValues[LEFT_ANKLE], -1, 1.0/(((double)frequency)/*16*/));
 					Dynamixel::setMotorPosition(3, -1*sin_values[current_sin_index]/((double)fudge_factor) +
 							acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
-					Dynamixel::setMotorPosition(9, sin_values[current_sin_index]/((double)fudge_factor) +
+					Dynamixel::setMotorPosition(9, sin_values[current_sin_index]/(2*(double)fudge_factor) +
 							acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
 
 					printf("%f\n", sin_values[current_sin_index]/((double)fudge_factor) +
@@ -157,7 +157,7 @@ int main() {
 					Dynamixel::setMotorPosition(12,legValues[THETA_ANKLE], -1, 1.0/(((double)frequency)/*16*/));
 					Dynamixel::setMotorPosition(4, sin_values[current_sin_index]/((double)fudge_factor) +
 							acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
-					Dynamixel::setMotorPosition(10, -1*sin_values[current_sin_index]/((double)fudge_factor) +
+					Dynamixel::setMotorPosition(10, -1*sin_values[current_sin_index]/(2*(double)fudge_factor) +
 							acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
 
 
