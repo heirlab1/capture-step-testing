@@ -151,7 +151,7 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 	int motor_positions = (int)(angle/(2.0*PI) * 4096.0);
 	int present_position = dxl_read_word(motor, P_PRESENT_POSITION);
 	int goal_position = 0;
-		std::cout << "Motor " << motor << ": " << motor_positions << std::endl;
+//		std::cout << "Motor " << motor << ": " << motor_positions << std::endl;
 	int zero_position = getZeroPose(motor);
 	std::vector<int> newData;
 	switch (motor) {
@@ -254,11 +254,17 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 	case 17:
 		break;
 	case 18:
-		break;
-	case 19:
-		break;
-	case 20:
 		break;*/
+	case 23:
+		goal_position = zero_position - motor_positions;
+		newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
+		newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
+		break;
+	case 24:
+		goal_position = zero_position - motor_positions;
+		newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
+		newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
+		break;
 	}
 	if (speed == -1) {
 		// Calculate speed from present position

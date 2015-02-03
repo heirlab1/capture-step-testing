@@ -15,6 +15,10 @@
 #include <stdio.h>
 //#include "config_parser.h"
 #include <sstream>
+#include<sys/types.h>
+#include <unistd.h>
+#include <pthread.h>
+#include "Vision.h"
 
 using namespace cv;
 
@@ -26,15 +30,19 @@ std::vector<double> sin_values;
 std::vector<std::vector<double> > left_leg_values;
 std::vector<std::vector<double> > right_leg_values;
 int frequency = 60;
-int amplitude = 6;
+int amplitude = 5;
 int samples = 64;
 int height = 26;
 double last_clock = 0;
-int fudge_factor = 4;
+//int fudge_factor = 4;
+int fudge_factor = 16;
 int fudge_2 = 0;
 int ankle_sway_percentage = 25;
 int hip_multiplier = 2;
 int ankle_multiplier = 1;
+int straight = 1;
+
+Vision vis;
 
 //configuration::data main_config;
 
@@ -49,57 +57,23 @@ std::vector<double> getLegThetas(double amplitude);
 void loadConfigs();
 void saveConfigs();
 std::vector<double> raiseLeg(double height, double leg_length, double theta_one);
+int run();
 
+void *walk(void *arg) {
+	run();
 
-int main() {
-	std::cout << "Begin testing Capture Step" << std::endl;
+	pthread_exit(0);
+}
 
-	cvNamedWindow("Ball");
-
-	//	for (int i = 0; i < 20; i++) {
-	//		pos[i] = Dynamixel::getZeroPose(i+1);
-	//	}
-	//		cvCreateTrackbar("Motor 1", "Ball", &pos[0], 4095, NULL);
-	//		cvCreateTrackbar("Motor 2", "Ball", &pos[1], 4095, NULL);
-	//		cvCreateTrackbar("Motor 3", "Ball", &pos[2], 4095, NULL);
-	//		cvCreateTrackbar("Motor 4", "Ball", &pos[3], 4095, NULL);
-	//		cvCreateTrackbar("Motor 5", "Ball", &pos[4], 4095, NULL);
-	//		cvCreateTrackbar("Motor 6", "Ball", &pos[5], 4095, NULL);
-	//		cvCreateTrackbar("Motor 7", "Ball", &pos[6], 4095, NULL);
-	//		cvCreateTrackbar("Motor 8", "Ball", &pos[7], 4095, NULL);
-	//		cvCreateTrackbar("Motor 9", "Ball", &pos[8], 4095, NULL);
-	//		cvCreateTrackbar("Motor 10", "Ball", &pos[9], 4095, NULL);
-	//		cvCreateTrackbar("Motor 11", "Ball", &pos[10], 4095, NULL);
-	//		cvCreateTrackbar("Motor 12", "Ball", &pos[11], 4095, NULL);
-	cvCreateTrackbar("Frequency", "Ball", &frequency, 10000, NULL);
-	cvCreateTrackbar("Amplitude", "Ball", &amplitude, 100, NULL);
-	cvCreateTrackbar("Fudge Factor HIPS", "Ball", &fudge_factor, 1000, NULL);
-	cvCreateTrackbar("Fudge Factor ANKLES", "Ball", &fudge_2, 1000, NULL);
-	cvCreateTrackbar("Ankle SWAY", "Ball", &ankle_sway_percentage, 1000, NULL);
-	cvCreateTrackbar("Zero Distance", "Ball", &LEG_CENTER, 34, NULL);
-	cvCreateTrackbar("Hip Multiplier", "Ball", &hip_multiplier, 10, NULL);
-	cvCreateTrackbar("Ankle Multiplier", "Ball", &ankle_multiplier, 10, NULL);
-	cvCreateTrackbar("Height Step", "Ball", &height, 100, NULL);
-	//	}
-
-	cvWaitKey(80);
-
-	Dynamixel::init();
-	for (int i = 1; i < 13; i++) {
-		Dynamixel::setMotorPosition(i, 0.0, -1, 1);
-		//		Dynamixel::enableMotor(i);
+void *vision(void *arg) {
+//	vis.init();
+	while (1) {
+		vis.setAction(CENTER_BALL);
+		vis.nextFrame();
 	}
+}
 
-	Dynamixel::setMotorPosition(16, 0.0, 25, -1);
-	Dynamixel::setMotorPosition(15, 0.0, 25, -1);
-	Dynamixel::setMotorPosition(17, 0.0, 25, -1);
-	Dynamixel::setMotorPosition(18, 0.0, 25, -1);
-	Dynamixel::setMotorPosition(23, 0.0, 25, -1);
-	Dynamixel::setMotorPosition(24, 0.0, 25, -1);
-	Dynamixel::setSyncwriteEachLength(4);
-	Dynamixel::setSyncwriteStartAddress(30);
-	Dynamixel::sendSyncWrite();
-
+int run() {
 	last_clock = getUnixTime();
 	int current_sin_index = 0;
 	sin_values.resize(samples);
@@ -137,10 +111,38 @@ int main() {
 					Dynamixel::setMotorPosition(11, (PI/2.0 - modified[THETA_ANKLE])*-1, -1, 1.0/(((double)frequency)/*16*/));
 					Dynamixel::setMotorPosition(6, legValues[LEFT_HIP], -1, 1.0/(((double)frequency)/*16*/));
 					Dynamixel::setMotorPosition(12,legValues[LEFT_ANKLE], -1, 1.0/(((double)frequency)/*16*/));
-					Dynamixel::setMotorPosition(3, -1*sin_values[current_sin_index]/((double)fudge_factor) +
-							acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
-					Dynamixel::setMotorPosition(9, sin_values[current_sin_index]/(2*(double)fudge_factor) +
-							acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
+
+					// If walking straight
+					if (straight == 1) {
+						Dynamixel::setMotorPosition(3, -1*sin_values[current_sin_index]/((double)fudge_factor) +
+								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
+						Dynamixel::setMotorPosition(9, sin_values[current_sin_index]/(2*(double)fudge_factor) +
+								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
+
+						Dynamixel::setMotorPosition(1, 0.0, -1, 1.0/((double)frequency));
+						Dynamixel::setMotorPosition(2, 0.0, -1, 1.0/((double)frequency));
+					}
+					// If turning Left
+					else if (straight == 0) {
+						Dynamixel::setMotorPosition(3, /*-1*sin_values[current_sin_index]/((double)fudge_factor)*/ -0.1 +
+								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
+						Dynamixel::setMotorPosition(9, /*sin_values[current_sin_index]/(2*(double)fudge_factor)*/ -0.1 +
+								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
+
+						Dynamixel::setMotorPosition(1, sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
+						Dynamixel::setMotorPosition(2, sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
+					}
+					// Turning right
+					else {
+						Dynamixel::setMotorPosition(3, /*-1*sin_values[current_sin_index]/((double)fudge_factor)*/ -0.1 +
+								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
+						Dynamixel::setMotorPosition(9, /*sin_values[current_sin_index]/(2*(double)fudge_factor)*/ -0.1 +
+								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
+
+						Dynamixel::setMotorPosition(1, -1*sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
+						Dynamixel::setMotorPosition(2, -1*sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
+
+					}
 
 					printf("%f\n", sin_values[current_sin_index]/((double)fudge_factor) +
 							acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))));
@@ -155,10 +157,37 @@ int main() {
 					Dynamixel::setMotorPosition(11, legValues[RIGHT_ANKLE], -1, 1.0/(((double)frequency)/*16*/));
 					Dynamixel::setMotorPosition(6, legValues[LEFT_HIP] + 15*modified[THETA_TWO], -1, 1.0/(((double)frequency)/*16*/));
 					Dynamixel::setMotorPosition(12,legValues[THETA_ANKLE], -1, 1.0/(((double)frequency)/*16*/));
-					Dynamixel::setMotorPosition(4, sin_values[current_sin_index]/((double)fudge_factor) +
-							acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
-					Dynamixel::setMotorPosition(10, -1*sin_values[current_sin_index]/(2*(double)fudge_factor) +
-							acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
+
+					// If walking straight
+					if (straight == 1) {
+						Dynamixel::setMotorPosition(4, sin_values[current_sin_index]/((double)fudge_factor) +
+								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
+						Dynamixel::setMotorPosition(10, -1*sin_values[current_sin_index]/(2*(double)fudge_factor) +
+								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
+
+						Dynamixel::setMotorPosition(1, 0.0, -1, 1.0/((double)frequency));
+						Dynamixel::setMotorPosition(2, 0.0, -1, 1.0/((double)frequency));
+					}
+					// Turning Left
+					else if (straight == 0) {
+						Dynamixel::setMotorPosition(4, /*sin_values[current_sin_index]/((double)fudge_factor)*/ -0.1 +
+								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
+						Dynamixel::setMotorPosition(10, /* -1*sin_values[current_sin_index]/(2*(double)fudge_factor)*/ -0.1 +
+								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
+
+						Dynamixel::setMotorPosition(1, sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
+						Dynamixel::setMotorPosition(2, sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
+					}
+					// Turning Right
+					else {
+						Dynamixel::setMotorPosition(4, /*sin_values[current_sin_index]/((double)fudge_factor)*/ -0.1 +
+								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
+						Dynamixel::setMotorPosition(10, /* -1*sin_values[current_sin_index]/(2*(double)fudge_factor)*/ -0.1 +
+								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
+
+						Dynamixel::setMotorPosition(1, -1*sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
+						Dynamixel::setMotorPosition(2, -1*sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
+					}
 
 
 					printf("%f\n", -1*sin_values[current_sin_index]/((double)fudge_factor) +
@@ -173,6 +202,8 @@ int main() {
 					Dynamixel::setMotorPosition(11, legValues[RIGHT_ANKLE], -1, 1.0/(((double)frequency)/*16*/));
 					Dynamixel::setMotorPosition(6, legValues[LEFT_HIP], -1, 1.0/(((double)frequency)/*16*/));
 					Dynamixel::setMotorPosition(12,legValues[LEFT_ANKLE], -1, 1.0/(((double)frequency)/*16*/));
+//					Dynamixel::setMotorPosition(1, 0.0, -1, 1.0/((double)frequency));
+//					Dynamixel::setMotorPosition(2, 0.0, -1, 1.0/((double)frequency));
 					setLegLengths(0, LEG_CENTER);
 				}
 
@@ -336,4 +367,81 @@ void saveConfig() {
 //	std::ofstream out("src/config.ini");
 //	out << config;
 //	out.close();
+}
+
+void init() {
+	std::cout << "Begin testing Capture Step" << std::endl;
+
+	cvNamedWindow("Walk Parameters");
+
+	//	for (int i = 0; i < 20; i++) {
+	//		pos[i] = Dynamixel::getZeroPose(i+1);
+	//	}
+	//		cvCreateTrackbar("Motor 1", "Ball", &pos[0], 4095, NULL);
+	//		cvCreateTrackbar("Motor 2", "Ball", &pos[1], 4095, NULL);
+	//		cvCreateTrackbar("Motor 3", "Ball", &pos[2], 4095, NULL);
+	//		cvCreateTrackbar("Motor 4", "Ball", &pos[3], 4095, NULL);
+	//		cvCreateTrackbar("Motor 5", "Ball", &pos[4], 4095, NULL);
+	//		cvCreateTrackbar("Motor 6", "Ball", &pos[5], 4095, NULL);
+	//		cvCreateTrackbar("Motor 7", "Ball", &pos[6], 4095, NULL);
+	//		cvCreateTrackbar("Motor 8", "Ball", &pos[7], 4095, NULL);
+	//		cvCreateTrackbar("Motor 9", "Ball", &pos[8], 4095, NULL);
+	//		cvCreateTrackbar("Motor 10", "Ball", &pos[9], 4095, NULL);
+	//		cvCreateTrackbar("Motor 11", "Ball", &pos[10], 4095, NULL);
+	//		cvCreateTrackbar("Motor 12", "Ball", &pos[11], 4095, NULL);
+	cvCreateTrackbar("Frequency", "Walk Parameters", &frequency, 10000, NULL);
+	cvCreateTrackbar("Amplitude", "Walk Parameters", &amplitude, 100, NULL);
+	cvCreateTrackbar("Fudge Factor HIPS", "Walk Parameters", &fudge_factor, 1000, NULL);
+	cvCreateTrackbar("Fudge Factor ANKLES", "Walk Parameters", &fudge_2, 1000, NULL);
+	cvCreateTrackbar("Ankle SWAY", "Walk Parameters", &ankle_sway_percentage, 1000, NULL);
+	cvCreateTrackbar("Zero Distance", "Walk Parameters", &LEG_CENTER, 34, NULL);
+	cvCreateTrackbar("Hip Multiplier", "Walk Parameters", &hip_multiplier, 10, NULL);
+	cvCreateTrackbar("Ankle Multiplier", "Walk Parameters", &ankle_multiplier, 10, NULL);
+	cvCreateTrackbar("Height Step", "Walk Parameters", &height, 100, NULL);
+	cvCreateTrackbar("Walk Straight", "Walk Parameters", &straight, 2, NULL);
+	//	}
+
+	cvWaitKey(80);
+
+	Dynamixel::init();
+	for (int i = 1; i < 13; i++) {
+		Dynamixel::setMotorPosition(i, 0.0, -1, 1);
+		//		Dynamixel::enableMotor(i);
+	}
+
+	Dynamixel::setMotorPosition(16, 0.0, 25, -1);
+	Dynamixel::setMotorPosition(15, 0.0, 25, -1);
+	Dynamixel::setMotorPosition(17, 0.0, 25, -1);
+	Dynamixel::setMotorPosition(18, 0.0, 25, -1);
+	Dynamixel::setMotorPosition(23, 0.0, 25, -1);
+	Dynamixel::setMotorPosition(24, 0.0, 25, -1);
+	Dynamixel::setSyncwriteEachLength(4);
+	Dynamixel::setSyncwriteStartAddress(30);
+	Dynamixel::sendSyncWrite();
+
+	vis.init();
+}
+
+
+int main() {
+	init();
+
+	pthread_t walking;
+	pthread_attr_t attr;
+	pthread_t vision_thread;
+	pthread_attr_t vision_attr;
+
+	pthread_attr_init(&attr);
+	pthread_attr_init(&vision_attr);
+
+	pthread_create(&walking, &attr, walk, 0);
+	pthread_create(&vision_thread, &vision_attr, vision, 0);
+
+	pthread_join(walking, NULL);
+
+	pthread_cancel(vision_thread);
+
+	pthread_join(vision_thread, NULL);
+
+	return 0;
 }
