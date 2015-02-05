@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include "Vision.h"
+#include "Motors.h"
 
 using namespace cv;
 
@@ -41,7 +42,7 @@ int ankle_sway_percentage = 25;
 int hip_multiplier = 2;
 int ankle_multiplier = 1;
 int straight = 1;
-
+double forward_back_offset = 0.0;
 Vision vis;
 
 //configuration::data main_config;
@@ -104,6 +105,44 @@ int run() {
 				Dynamixel::setSyncwriteStartAddress(30);
 				std::vector<double> legValues = getLegThetas((double)(amplitude)*sin_values[current_sin_index]);
 
+				double head_up = Motors::getMotorPosition(24);
+				double head_left = Motors::getMotorPosition(23);
+				forward_back_offset = 0.0;
+
+				if (head_left < PI/-6.0) {
+					Dynamixel::setMotorPosition(13, 0.0, -1, 0.5);
+					Dynamixel::setMotorPosition(14, 0.0, -1, 0.5);
+					if (current_sin_index == 0) {
+						straight = 2;
+						fudge_factor = 5;
+					}
+				}
+				else if (head_left > PI/6.0) {
+					Dynamixel::setMotorPosition(13, 0.0, -1, 0.5);
+					Dynamixel::setMotorPosition(14, 0.0, -1, 0.5);
+					if (current_sin_index == 0) {
+						straight = 0;
+						fudge_factor = 5;
+					}
+				}
+				else {
+					if (head_up < PI/-4.0) {
+						Dynamixel::setMotorPosition(13, PI/-4.0, -1, 0.5);
+						Dynamixel::setMotorPosition(14, PI/-4.0, -1, 0.5);
+					} else {
+					Dynamixel::setMotorPosition(13, PI/-6.0, -1, 0.5);
+					Dynamixel::setMotorPosition(14, PI/-6.0, -1, 0.5);
+					}
+					if (current_sin_index == 0) {
+						straight = 1;
+						fudge_factor = 4;
+					}
+				}
+
+				if (head_up < PI/-6.0) {
+					forward_back_offset = 0.01;
+				}
+
 				if (sin_values[current_sin_index] < -0.85) {
 					// Raise the right leg
 					std::vector<double> modified = raiseLeg(height/10.0, LEG_CENTER, legValues[RIGHT_HIP]);
@@ -114,9 +153,9 @@ int run() {
 
 					// If walking straight
 					if (straight == 1) {
-						Dynamixel::setMotorPosition(3, -1*sin_values[current_sin_index]/((double)fudge_factor) +
+						Dynamixel::setMotorPosition(3, -1*sin_values[current_sin_index]/((double)fudge_factor) /* - forward_back_offset */+
 								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
-						Dynamixel::setMotorPosition(9, sin_values[current_sin_index]/(2*(double)fudge_factor) +
+						Dynamixel::setMotorPosition(9, sin_values[current_sin_index]/(3*(double)fudge_factor) +
 								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
 
 						Dynamixel::setMotorPosition(1, 0.0, -1, 1.0/((double)frequency));
@@ -160,7 +199,7 @@ int run() {
 
 					// If walking straight
 					if (straight == 1) {
-						Dynamixel::setMotorPosition(4, sin_values[current_sin_index]/((double)fudge_factor) +
+						Dynamixel::setMotorPosition(4, sin_values[current_sin_index]/((double)fudge_factor) + //forward_back_offset +
 								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(10, -1*sin_values[current_sin_index]/(2*(double)fudge_factor) +
 								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
@@ -415,6 +454,8 @@ void init() {
 	Dynamixel::setMotorPosition(18, 0.0, 25, -1);
 	Dynamixel::setMotorPosition(23, 0.0, 25, -1);
 	Dynamixel::setMotorPosition(24, 0.0, 25, -1);
+	Dynamixel::setMotorPosition(13, 0.0, -1, 0.5);
+	Dynamixel::setMotorPosition(14, 0.0, -1, 0.5);
 	Dynamixel::setSyncwriteEachLength(4);
 	Dynamixel::setSyncwriteStartAddress(30);
 	Dynamixel::sendSyncWrite();

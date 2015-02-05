@@ -8,6 +8,7 @@
 #include "Vision.h"
 #include "Dynamixel.h"
 #include <cmath>
+#include "Motors.h";
 
 bool visionDisplayEnabled = true;
 
@@ -37,6 +38,9 @@ bool headLeft;
 bool headRight;
 bool headUp;
 bool headDown;
+
+double head_up_angle = 0.0;
+double head_left_angle = 0.0;
 
 
 
@@ -284,15 +288,16 @@ double Vision::getRobotDistanceToPoint(Point p) {
 void Vision::calibrateThresholds() {
 	// Create the window where the thresholded image will be displayed
 	namedWindow("Goal Thresholding", WINDOW_NORMAL);
+	namedWindow("Test", WINDOW_NORMAL);
 	// Create the trackbars
-	cvCreateTrackbar("LowerH", "Ball", &lowerH, 255, NULL);
-	cvCreateTrackbar("UpperH", "Ball", &upperH, 255, NULL);
+	cvCreateTrackbar("LowerH", "Test", &lowerH, 255, NULL);
+	cvCreateTrackbar("UpperH", "Test", &upperH, 255, NULL);
 
-	cvCreateTrackbar("LowerS", "Ball", &lowerS, 255, NULL);
-	cvCreateTrackbar("UpperS", "Ball", &upperS, 255, NULL);
+	cvCreateTrackbar("LowerS", "Test", &lowerS, 255, NULL);
+	cvCreateTrackbar("UpperS", "Test", &upperS, 255, NULL);
 
-	cvCreateTrackbar("LowerV", "Ball", &lowerV, 255, NULL);
-	cvCreateTrackbar("UpperV", "Ball", &upperV, 255, NULL);
+	cvCreateTrackbar("LowerV", "Test", &lowerV, 255, NULL);
+	cvCreateTrackbar("UpperV", "Test", &upperV, 255, NULL);
 
 
 	// Keep updating the image with the current thresholds until the user presses 'g'
@@ -309,19 +314,20 @@ void Vision::calibrateThresholds() {
 
 	// Once the goal has been thresholded, we no longer need the frame
 	destroyWindow("Goal Thresholding");
-
+	destroyWindow("IMG HSV");
+	destroyWindow("imgThresh");
 	// Create the window where the thresholded image will be displayed
 	namedWindow("Ball Thresholding", WINDOW_NORMAL);
 
 	// Create the sliding bars used to adjust the threshold levels
-	cvCreateTrackbar("LowerR", "Ball", &ballLowerH, 255, NULL);
-	cvCreateTrackbar("UpperR", "Ball", &ballUpperH, 255, NULL);
+	cvCreateTrackbar("LowerR", "Test", &ballLowerH, 255, NULL);
+	cvCreateTrackbar("UpperR", "Test", &ballUpperH, 255, NULL);
 
-	cvCreateTrackbar("LowerG", "Ball", &ballLowerS, 255, NULL);
-	cvCreateTrackbar("UpperG", "Ball", &ballUpperS, 255, NULL);
+	cvCreateTrackbar("LowerG", "Test", &ballLowerS, 255, NULL);
+	cvCreateTrackbar("UpperG", "Test", &ballUpperS, 255, NULL);
 
-	cvCreateTrackbar("LowerB", "Ball", &ballLowerV, 255, NULL);
-	cvCreateTrackbar("UpperB", "Ball", &ballUpperV, 255, NULL);
+	cvCreateTrackbar("LowerB", "Test", &ballLowerV, 255, NULL);
+	cvCreateTrackbar("UpperB", "Test", &ballUpperV, 255, NULL);
 
 	// Keep updating the image with the current thresholds until the user presses 'b'
 	while ((char)waitKey(80) != 'b') {
@@ -347,6 +353,7 @@ void Vision::calibrateThresholds() {
 
 	// Once the ball has been thresholded, we no longer need the frame
 	destroyWindow("Ball Thresholding");
+	destroyWindow("Test");
 }
 
 void Vision::setAction(int newAction) {
@@ -1756,43 +1763,103 @@ void Vision::center_goal(Mat frame) {
 	if (boundRect.center.x >= 0) {
 		if (boundRect.center.x < 213/*310*/) {
 			if (boundRect.center.y < 160/*230*/) {
-				Dynamixel::setMotorPosition(23, PI/2.0, 25, -1);
-				Dynamixel::setMotorPosition(24, PI/2.0, 25, -1);
+				head_up_angle += PI/64.0;
+				head_left_angle -= PI/64.0;
+				if (head_up_angle > PI/2.0) {
+					head_up_angle = PI/2.0;
+				}
+				if (head_left_angle < PI/-2.0) {
+					head_left_angle = PI/-2.0;
+				}
+				Dynamixel::setMotorPosition(24, head_up_angle, -1, 1.0/30);
+				Dynamixel::setMotorPosition(23, head_left_angle, -1, 1.0/30);
+				Motors::setMotorPosition(24, head_up_angle);
+				Motors::setMotorPosition(23, head_left_angle);
 //				motorController->moveHead(MUL8_HEAD_UP_RIGHT, 25);
 			}
 			else if (boundRect.center.y > 320/*250*/) {
-				Dynamixel::setMotorPosition(23, PI/2.0, 25, -1);
-				Dynamixel::setMotorPosition(24, -1*PI/2.0, 25, -1);
+				head_up_angle -= PI/64.0;
+				head_left_angle -= PI/64.0;
+				if (head_up_angle < PI/-2.0) {
+					head_up_angle = PI/-2.0;
+				}
+				if (head_left_angle < PI/-2.0) {
+					head_left_angle = PI/-2.0;
+				}
+				Dynamixel::setMotorPosition(24, head_up_angle, -1, 1.0/30);
+				Dynamixel::setMotorPosition(23, head_left_angle, -1, 1.0/30);
+				Motors::setMotorPosition(24, head_up_angle);
+				Motors::setMotorPosition(23, head_left_angle);
 //				motorController->moveHead(MUL8_HEAD_DOWN_RIGHT, 25);
 			}
 			else {
-				Dynamixel::setMotorPosition(23, PI/2.0, 25, -1);
+				head_left_angle -= PI/64.0;
+				if (head_left_angle < PI/-2.0) {
+					head_left_angle = PI/-2.0;
+				}
+				Dynamixel::setMotorPosition(23, head_left_angle, -1, 1.0/30);
+				Motors::setMotorPosition(23, head_left_angle);
 //				motorController->moveHead(MUL8_HEAD_RIGHT, 25);
 			}
 		}
 		else if (boundRect.center.x > 427/*330*/) {
 			if (boundRect.center.y < 160/*230*/) {
-				Dynamixel::setMotorPosition(23, -1*PI/2.0, 25, -1);
-				Dynamixel::setMotorPosition(24, PI/2.0, 25, -1);
+				head_up_angle += PI/64.0;
+				head_left_angle += PI/64.0;
+				if (head_up_angle > PI/2.0) {
+					head_up_angle = PI/2.0;
+				}
+				if (head_left_angle > PI/2.0) {
+					head_left_angle = PI/2.0;
+				}
+				Dynamixel::setMotorPosition(24, head_up_angle, -1, 1.0/30);
+				Dynamixel::setMotorPosition(23, head_left_angle, -1, 1.0/30);
+				Motors::setMotorPosition(24, head_up_angle);
+				Motors::setMotorPosition(23, head_left_angle);
 //				motorController->moveHead(MUL8_HEAD_UP_LEFT, 25);
 			}
 			else if (boundRect.center.y > 320/*250*/) {
-				Dynamixel::setMotorPosition(23, -1*PI/2.0, 25, -1);
-				Dynamixel::setMotorPosition(24, -1*PI/2.0, 25, -1);
+				head_up_angle -= PI/64.0;
+				head_left_angle += PI/64.0;
+				if (head_up_angle < PI/-2.0) {
+					head_up_angle = PI/-2.0;
+				}
+				if (head_left_angle > PI/2.0) {
+					head_left_angle = PI/2.0;
+				}
+				Dynamixel::setMotorPosition(24, head_up_angle, -1, 1.0/30);
+				Dynamixel::setMotorPosition(23, head_left_angle, -1, 1.0/30);
+				Motors::setMotorPosition(24, head_up_angle);
+				Motors::setMotorPosition(23, head_left_angle);
 //				motorController->moveHead(MUL8_HEAD_DOWN_LEFT, 25);
 			}
 			else {
-				Dynamixel::setMotorPosition(23, -1*PI/2.0, 25, -1);
+				head_left_angle += PI/64.0;
+				if (head_left_angle > PI/2.0) {
+					head_left_angle = PI/2.0;
+				}
+				Dynamixel::setMotorPosition(23, head_left_angle, -1, 1.0/30);
+				Motors::setMotorPosition(23, head_left_angle);
 //				motorController->moveHead(MUL8_HEAD_LEFT, 25);
 			}
 		}
 		else {
 			if (boundRect.center.y < 160/*230*/) {
-				Dynamixel::setMotorPosition(24, PI/2.0, 25, -1);
+				head_up_angle += PI/64.0;
+				if (head_up_angle > PI/2.0) {
+					head_up_angle = PI/2.0;
+				}
+				Dynamixel::setMotorPosition(24, head_up_angle, -1, 1.0/30);
+				Motors::setMotorPosition(24, head_up_angle);
 //				motorController->moveHead(MUL8_HEAD_UP, 25);
 			}
 			else if (boundRect.center.y > 320/*250*/) {
-				Dynamixel::setMotorPosition(24, -1*PI/2.0, 25, -1);
+				head_up_angle -= PI/64.0;
+				if (head_up_angle < PI/-2.0) {
+					head_up_angle = PI/-2.0;
+				}
+				Dynamixel::setMotorPosition(24, head_up_angle, -1, 1.0/30);
+				Motors::setMotorPosition(24, head_up_angle);
 //				motorController->moveHead(MUL8_HEAD_DOWN, 25);
 			}
 			else {
@@ -1826,39 +1893,94 @@ void Vision::center_ball(Mat frame) {
 
 		if (centerX < /*213*/310) {
 			if (centerY < /*160*/230) {
-				Dynamixel::setMotorPosition(23, PI/2.0, 25, -1);
-				Dynamixel::setMotorPosition(24, PI/2.0, 25, -1);
+				head_up_angle += PI/64.0;
+				head_left_angle -= PI/64.0;
+				if (head_up_angle > PI/2.0) {
+					head_up_angle = PI/2.0;
+				}
+				if (head_left_angle < PI/-2.0) {
+					head_left_angle = PI/-2.0;
+				}
+				Dynamixel::setMotorPosition(24, head_up_angle, -1, 1.0/30);
+				Dynamixel::setMotorPosition(23, head_left_angle, -1, 1.0/30);
+				Motors::setMotorPosition(24, head_up_angle);
+				Motors::setMotorPosition(23, head_left_angle);
 //				motorController->moveHead(MUL8_HEAD_UP_RIGHT, speed);
 			}
 			else if (centerY > /*320*/250) {
-				Dynamixel::setMotorPosition(23, PI/2.0, 25, -1);
-				Dynamixel::setMotorPosition(24, -1*PI/2.0, 25, -1);
+				head_up_angle -= PI/64.0;
+				head_left_angle -= PI/64.0;
+				if (head_up_angle < PI/-2.0) {
+					head_up_angle = PI/-2.0;
+				}
+				if (head_left_angle < PI/-2.0) {
+					head_left_angle = PI/-2.0;
+				}
+				Dynamixel::setMotorPosition(24, head_up_angle, -1, 1.0/30);
+				Dynamixel::setMotorPosition(23, head_left_angle, -1, 1.0/30);
+				Motors::setMotorPosition(24, head_up_angle);
+				Motors::setMotorPosition(23, head_left_angle);
 //				motorController->moveHead(MUL8_HEAD_DOWN_RIGHT, speed);
 			}
 			else {
-				Dynamixel::setMotorPosition(23, PI/2.0, 25, -1);
+				head_left_angle -= PI/64.0;
+				if (head_left_angle < PI/-2.0) {
+					head_left_angle = PI/-2.0;
+				}
+				Dynamixel::setMotorPosition(23, head_left_angle, -1, 1.0/30);
+				Motors::setMotorPosition(23, head_left_angle);
 //				motorController->moveHead(MUL8_HEAD_RIGHT, speed);
 			}
 		}
 		else if (centerX > /*427*/330) {
 			if (centerY < /*160*/230) {
-				Dynamixel::setMotorPosition(23, -1*PI/2.0, 25, -1);
-				Dynamixel::setMotorPosition(24, PI/2.0, 25, -1);
+				head_up_angle += PI/64.0;
+				head_left_angle += PI/64.0;
+				if (head_up_angle > PI/2.0) {
+					head_up_angle = PI/2.0;
+				}
+				if (head_left_angle > PI/2.0) {
+					head_left_angle = PI/2.0;
+				}
+				Dynamixel::setMotorPosition(24, head_up_angle, -1, 1.0/30);
+				Dynamixel::setMotorPosition(23, head_left_angle, -1, 1.0/30);
+				Motors::setMotorPosition(24, head_up_angle);
+				Motors::setMotorPosition(23, head_left_angle);
 //				motorController->moveHead(MUL8_HEAD_UP_LEFT, speed);
 			}
 			else if (centerY > /*320*/250) {
-				Dynamixel::setMotorPosition(23, -1*PI/2.0, 25, -1);
-				Dynamixel::setMotorPosition(24, -1*PI/2.0, 25, -1);
+				head_up_angle -= PI/64.0;
+				head_left_angle += PI/64.0;
+				if (head_up_angle < PI/-2.0) {
+					head_up_angle = PI/-2.0;
+				}
+				if (head_left_angle > PI/2.0) {
+					head_left_angle = PI/2.0;
+				}
+				Dynamixel::setMotorPosition(24, head_up_angle, -1, 1.0/30);
+				Dynamixel::setMotorPosition(23, head_left_angle, -1, 1.0/30);
+				Motors::setMotorPosition(24, head_up_angle);
+				Motors::setMotorPosition(23, head_left_angle);
 //				motorController->moveHead(MUL8_HEAD_DOWN_LEFT, speed);
 			}
 			else {
-				Dynamixel::setMotorPosition(23, -1*PI/2.0, 25, -1);
+				head_left_angle += PI/64.0;
+				if (head_left_angle > PI/2.0) {
+					head_left_angle = PI/2.0;
+				}
+				Dynamixel::setMotorPosition(23, head_left_angle, -1, 1.0/30);
+				Motors::setMotorPosition(23, head_left_angle);
 //				motorController->moveHead(MUL8_HEAD_LEFT, speed);
 			}
 		}
 		else {
 			if (centerY < /*160*/230) {
-				Dynamixel::setMotorPosition(24, PI/2.0, 25, -1);
+				head_up_angle += PI/64.0;
+				if (head_up_angle > PI/2.0) {
+					head_up_angle = PI/2.0;
+				}
+				Dynamixel::setMotorPosition(24, head_up_angle, -1, 1.0/30);
+				Motors::setMotorPosition(24, head_up_angle);
 //				motorController->moveHead(MUL8_HEAD_UP, speed);
 			}
 //			else if (motorController->readMotorPosition(24) < 510) {
@@ -1887,7 +2009,12 @@ void Vision::center_ball(Mat frame) {
 //
 //			}
 			else if (centerY >/* 320*/250) {
-				Dynamixel::setMotorPosition(24, -1*PI/2.0, 25, -1);
+				head_up_angle -= PI/64.0;
+				if (head_up_angle < PI/-2.0) {
+					head_up_angle = PI/-2.0;
+				}
+				Dynamixel::setMotorPosition(24, head_up_angle, -1, 1.0/30);
+				Motors::setMotorPosition(24, head_up_angle);
 //				motorController->moveHead(MUL8_HEAD_DOWN, speed);
 				std::cout << "I am going to detect the ball distance" << std::endl;
 				ball_distance[ball_index] = detectBallDistance(centerRec);
