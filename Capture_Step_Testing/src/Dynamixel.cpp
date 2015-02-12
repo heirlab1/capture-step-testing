@@ -16,6 +16,7 @@
 #include <fstream>
 #include <sstream>
 #include <pthread.h>
+#include "Motors.h"
 
 #define P_GOAL_POSITION		30
 #define P_MOVING_SPEED		32
@@ -162,9 +163,9 @@ void Dynamixel::setMotorPositionInt(int motor, int position) {
 }
 
 void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double time = -1) {
-	printf("Motor %d Locking Mutex... ", motor);
+//	printf("Motor %d Locking Mutex... ", motor);
 	pthread_mutex_lock(&mutex);
-	printf("Mutext locked\n");
+//	printf("Mutext locked\n");
 	// Convert angle to motor positions
 	int motor_positions = (int)(angle/(2.0*PI) * 4096.0);
 	int present_position = dxl_read_word(motor, P_PRESENT_POSITION);
@@ -260,9 +261,9 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 		break;
 	default:
 		dxl_write_byte(motor, P_ENABLE, true);
-		printf("Unlocking Mutex ... ");
+//		printf("Unlocking Mutex ... ");
 		pthread_mutex_unlock(&mutex);
-		printf("Mutex Unlocked\n");
+//		printf("Mutex Unlocked\n");
 		return;
 	case 13:
 		goal_position = zero_position + motor_positions;
@@ -313,9 +314,11 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 
 	addToSyncwrite(motor, newData);
 
-	printf("Unlocking Mutex ... ");
+//	printf("Unlocking Mutex ... ");
 	pthread_mutex_unlock(&mutex);
-	printf("Mutex Unlocked\n");
+//	printf("Mutex Unlocked\n");
+
+	Motors::setMotorPosition(motor, angle);
 }
 
 void Dynamixel::enableMotor(int motor) {

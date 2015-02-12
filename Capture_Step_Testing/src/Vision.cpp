@@ -8,7 +8,7 @@
 #include "Vision.h"
 #include "Dynamixel.h"
 #include <cmath>
-#include "Motors.h";
+#include "Motors.h"
 
 bool visionDisplayEnabled = true;
 
