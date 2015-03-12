@@ -22,21 +22,15 @@
 #include "Motors.h"
 #include "Walk.h"
 #include "BallFollower.h"
+#include "IMUServer.h"
+#include "IMUData.h"
+#include "Joystick.h"
 
 using namespace cv;
 
-Vision vis;
+//Vision vis;
 WalkEngine::Walk walk;
 BallFollow::BallFollower ballFollower(walk);
-
-
-//double getUnixTime(void);
-//void setLegLengths(int leg,int length);
-//std::vector<double> getLegThetas(double amplitude);
-//void loadConfigs();
-//void saveConfigs();
-//std::vector<double> raiseLeg(double height, double leg_length, double theta_one);
-//int run();
 
 void *walk_thread_function(void *arg) {
 	walk.run();
@@ -44,19 +38,20 @@ void *walk_thread_function(void *arg) {
 	pthread_exit(0);
 }
 
-void *vision(void *arg) {
-//	vis.init();
-	while (1) {
-		vis.setAction(CENTER_BALL);
-		vis.nextFrame();
-	}
-
-	pthread_exit(0);
-}
+//void *vision(void *arg) {
+////	vis.init();
+//	while (1) {
+//		vis.setAction(CENTER_BALL);
+//		vis.nextFrame();
+//	}
+//
+//	pthread_exit(0);
+//}
 
 void *follow(void *arg) {
 	while (1) {
 		ballFollower.run();
+		pthread_testcancel();
 	}
 
 	pthread_exit(0);
@@ -89,35 +84,6 @@ void saveConfig() {
 void init() {
 	std::cout << "Begin testing Capture Step" << std::endl;
 
-//	cvNamedWindow("Walk Parameters");
-
-	//	for (int i = 0; i < 20; i++) {
-	//		pos[i] = Dynamixel::getZeroPose(i+1);
-	//	}
-	//		cvCreateTrackbar("Motor 1", "Ball", &pos[0], 4095, NULL);
-	//		cvCreateTrackbar("Motor 2", "Ball", &pos[1], 4095, NULL);
-	//		cvCreateTrackbar("Motor 3", "Ball", &pos[2], 4095, NULL);
-	//		cvCreateTrackbar("Motor 4", "Ball", &pos[3], 4095, NULL);
-	//		cvCreateTrackbar("Motor 5", "Ball", &pos[4], 4095, NULL);
-	//		cvCreateTrackbar("Motor 6", "Ball", &pos[5], 4095, NULL);
-	//		cvCreateTrackbar("Motor 7", "Ball", &pos[6], 4095, NULL);
-	//		cvCreateTrackbar("Motor 8", "Ball", &pos[7], 4095, NULL);
-	//		cvCreateTrackbar("Motor 9", "Ball", &pos[8], 4095, NULL);
-	//		cvCreateTrackbar("Motor 10", "Ball", &pos[9], 4095, NULL);
-	//		cvCreateTrackbar("Motor 11", "Ball", &pos[10], 4095, NULL);
-	//		cvCreateTrackbar("Motor 12", "Ball", &pos[11], 4095, NULL);
-//	cvCreateTrackbar("Frequency", "Walk Parameters", &frequency, 10000, NULL);
-//	cvCreateTrackbar("Amplitude", "Walk Parameters", &amplitude, 100, NULL);
-//	cvCreateTrackbar("Fudge Factor HIPS", "Walk Parameters", &fudge_factor, 1000, NULL);
-//	cvCreateTrackbar("Fudge Factor ANKLES", "Walk Parameters", &fudge_2, 1000, NULL);
-//	cvCreateTrackbar("Ankle SWAY", "Walk Parameters", &ankle_sway_percentage, 1000, NULL);
-//	cvCreateTrackbar("Zero Distance", "Walk Parameters", &LEG_CENTER, 34, NULL);
-//	cvCreateTrackbar("Hip Multiplier", "Walk Parameters", &hip_multiplier, 10, NULL);
-//	cvCreateTrackbar("Ankle Multiplier", "Walk Parameters", &ankle_multiplier, 10, NULL);
-//	cvCreateTrackbar("Height Step", "Walk Parameters", &height, 100, NULL);
-//	cvCreateTrackbar("Walk Straight", "Walk Parameters", &straight, 2, NULL);
-	//	}
-
 	cvWaitKey(80);
 
 	Dynamixel::init();
@@ -138,7 +104,7 @@ void init() {
 	Dynamixel::setSyncwriteStartAddress(30);
 	Dynamixel::sendSyncWrite();
 
-	vis.init();
+//	vis.init();
 }
 
 
@@ -154,29 +120,45 @@ int main() {
 	pthread_t ball_follower;
 	pthread_attr_t ball_attr;
 
+	pthread_t imu_server;
+	pthread_attr_t imu_attr;
+
+	pthread_t joystick_server;
+	pthread_attr_t joystick_attr;
+
 	pthread_attr_init(&attr);
 	pthread_attr_init(&vision_attr);
 	pthread_attr_init(&ball_attr);
+	pthread_attr_init(&imu_attr);
+	pthread_attr_init(&joystick_attr);
+
+	pthread_create(&joystick_server, &joystick_attr, Joystick::run, 0);
 
 	pthread_create(&walking, &attr, walk_thread_function, 0);
-	pthread_create(&vision_thread, &vision_attr, vision, 0);
+//	pthread_create(&vision_thread, &vision_attr, vision, 0);
 	pthread_create(&ball_follower, &ball_attr, follow, 0);
+//	pthread_create(&imu_server, &imu_attr, IMU_Server::run, 0);
 
 	pthread_join(walking, NULL);
 
-	pthread_cancel(vision_thread);
+//	pthread_cancel(vision_thread);
 
-	pthread_join(vision_thread, NULL);
+//	pthread_join(vision_thread, NULL);
 
-	printf("Joined Vision\n");
+//	printf("Joined Vision\n");
 
 	pthread_cancel(ball_follower);
+	pthread_cancel(joystick_server);
 
 	printf("Ball Follower Cancelled\n");
 
 	// Don't need to worry about joining here because we are exiting the program
 	// However, it is slightly worrisome why this causes the program to hang
 	pthread_join(ball_follower, NULL);
+
+//	pthread_cancel(imu_server);
+
+//	pthread_join(imu_server, NULL);
 
 	printf("Ball Follower Joined\n");
 

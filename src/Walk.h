@@ -11,6 +11,8 @@
 namespace WalkEngine {
 
 class Walk {
+
+
 public:
 	Walk();
 	virtual ~Walk();
@@ -18,6 +20,7 @@ public:
 	void turn_left();
 	void turn_right();
 	void walk_straight();
+
 };
 
 } /* namespace WalkEngine */

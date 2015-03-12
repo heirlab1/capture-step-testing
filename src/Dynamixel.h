@@ -23,6 +23,7 @@ namespace Dynamixel {
 	bool setSyncwriteEachLength(int eachLength);
 	bool sendSyncWrite();
 	void saveConfig();
+	void setInitialPose(int motor, int adjustment);
 }
 
 #endif /* DYNAMIXEL_H_ */

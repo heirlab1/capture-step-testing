@@ -157,6 +157,10 @@ int Dynamixel::getZeroPose(int motor) {
 	}
 }
 
+void Dynamixel::setInitialPose(int motor, int adjustment) {
+	pos[motor-1] += adjustment;
+}
+
 void Dynamixel::setMotorPositionInt(int motor, int position) {
 	dxl_write_word(motor, P_MOVING_SPEED, 50);
 	dxl_write_word(motor, P_GOAL_POSITION, position);
@@ -235,15 +239,15 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position + motor_positions);
 		goal_position = zero_position + motor_positions;
-		newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
-		newData.push_back(dxl_get_highbyte(zero_position + motor_positions));
+		newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
+		newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
 		break;
 	case 10:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position + motor_positions);
 		goal_position = zero_position + motor_positions;
-		newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
-		newData.push_back(dxl_get_highbyte(zero_position + motor_positions));
+		newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
+		newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
 		break;
 	case 11:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
