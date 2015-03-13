@@ -15,10 +15,10 @@ SDL_Joystick* gGameController = NULL;
 //Analog joystick dead zone
 const int JOYSTICK_DEADZONE = 8000;
 
-Joystick::joystick joy;
-
 namespace Joystick {
 
+
+Joystick::joystick joy;
 
 
 bool init_sdl() {
@@ -68,7 +68,7 @@ void* /*Joystick::*/run(void* args) {
 				}
 			}
 			else if (e.type == SDL_JOYBUTTONDOWN) {
-				//				printf("Button = %d\n", e.jbutton.button);
+//								printf("Button = %d\n", e.jbutton.button);
 //				switch(e.jbutton.button) {
 //				case X_BUTTON:
 //					printf("X button!\n");
