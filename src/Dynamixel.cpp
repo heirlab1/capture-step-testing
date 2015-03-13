@@ -25,6 +25,8 @@
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
+bool new_robot = false;
+
 #define PI 3.14159265
 
 int initial_poses[] = {650, 3436, 1005, 2079,
@@ -45,9 +47,15 @@ int each_length = 0;
 void Dynamixel::init() {
 	dxl_initialize(0, 0);
 
-	std::ifstream f("src/config.ini");
-	f >> config;
-	f.close();
+	if (new_robot) {
+		std::ifstream f("src/config.ini.new_robot");
+		f >> config;
+		f.close();
+	} else {
+		std::ifstream f("src/config.ini.old_robot");
+		f >> config;
+		f.close();
+	}
 
 	cvNamedWindow("Initial Positions");
 
@@ -125,9 +133,15 @@ void Dynamixel::saveConfig() {
 			config[key] =  value_convert.str();
 	}
 
-	std::ofstream out("src/config.ini");
-	out << config;
-	out.close();
+	if (new_robot) {
+		std::ofstream out("src/config.ini.new_robot");
+		out << config;
+		out.close();
+	} else {
+		std::ofstream out("src/config.ini.old_robot");
+		out << config;
+		out.close();
+	}
 //	init();
 }
 
@@ -238,16 +252,28 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 	case 9:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position + motor_positions);
-		goal_position = zero_position + motor_positions;
-		newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
-		newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
+		if (new_robot) {
+			goal_position = zero_position - motor_positions;
+			newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
+			newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
+		} else {
+			goal_position = zero_position + motor_positions;
+			newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
+			newData.push_back(dxl_get_highbyte(zero_position + motor_positions));
+		}
 		break;
 	case 10:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
 		//		dxl_write_word(motor, P_GOAL_POSITION, zero_position + motor_positions);
-		goal_position = zero_position + motor_positions;
-		newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
-		newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
+		if (new_robot) {
+			goal_position = zero_position - motor_positions;
+			newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
+			newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
+		} else {
+			goal_position = zero_position + motor_positions;
+			newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
+			newData.push_back(dxl_get_highbyte(zero_position + motor_positions));
+		}
 		break;
 	case 11:
 		//		dxl_write_word(motor, P_MOVING_SPEED, speed);
