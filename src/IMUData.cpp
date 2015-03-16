@@ -17,9 +17,9 @@ double values[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 double get(int index) {
 	// TODO Might need mutex here?
 	double result;
-	pthread_mutex_lock(&imu_mutex);
+//	pthread_mutex_lock(&imu_mutex);
 	result = values[index];
-	pthread_mutex_unlock(&imu_mutex);
+//	pthread_mutex_unlock(&imu_mutex);
 	return result;
 //	return (values[index]);
 
@@ -27,8 +27,8 @@ double get(int index) {
 
 void set(int index, double value) {
 	// TODO Might need mutex here?
-	pthread_mutex_lock(&imu_mutex);
+//	pthread_mutex_lock(&imu_mutex);
 	values[index] = value;
-	pthread_mutex_unlock(&imu_mutex);
+//	pthread_mutex_unlock(&imu_mutex);
 }
 } /* namespace IMU */

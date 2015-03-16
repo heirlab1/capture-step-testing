@@ -109,6 +109,16 @@ void init() {
 
 
 int main() {
+
+	pthread_t joystick_server;
+	pthread_attr_t joystick_attr;
+
+	pthread_attr_init(&joystick_attr);
+
+	pthread_create(&joystick_server, &joystick_attr, Joystick::run, 0);
+
+	while (Joystick::joy.buttons[Joystick::Y_BUTTON] != BUTTON_PRESSED);
+
 	init();
 
 	BallFollow::BallFollower ballFollower(walk);
@@ -123,16 +133,13 @@ int main() {
 	pthread_t imu_server;
 	pthread_attr_t imu_attr;
 
-	pthread_t joystick_server;
-	pthread_attr_t joystick_attr;
-
 	pthread_attr_init(&attr);
 	pthread_attr_init(&vision_attr);
 	pthread_attr_init(&ball_attr);
 	pthread_attr_init(&imu_attr);
-	pthread_attr_init(&joystick_attr);
 
-	pthread_create(&joystick_server, &joystick_attr, Joystick::run, 0);
+	// Busy wait
+	while (Joystick::joy.buttons[Joystick::X_BUTTON] != BUTTON_PRESSED);
 
 	pthread_create(&walking, &attr, walk_thread_function, 0);
 //	pthread_create(&vision_thread, &vision_attr, vision, 0);
@@ -152,12 +159,11 @@ int main() {
 
 	printf("Ball Follower Cancelled\n");
 
-	// Don't need to worry about joining here because we are exiting the program
-	// However, it is slightly worrisome why this causes the program to hang
+
 	pthread_join(ball_follower, NULL);
 
 //	pthread_cancel(imu_server);
-
+//
 //	pthread_join(imu_server, NULL);
 
 	printf("Ball Follower Joined\n");

@@ -9,7 +9,7 @@
 #include <ctime>
 
 ReadIMU imu_device;
-double timeout = 1.0/60.0;
+double timeout = 1.0/10.0;
 
 double getUnixTime() {
 	struct timespec tv;
