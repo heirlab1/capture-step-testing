@@ -17,6 +17,7 @@
 #include <sstream>
 #include <pthread.h>
 #include "Motors.h"
+#include "mutexes.h"
 
 #define P_GOAL_POSITION		30
 #define P_MOVING_SPEED		32
@@ -415,7 +416,11 @@ bool Dynamixel::sendSyncWrite() {
 
 	dxl_set_txpacket_length((each_length+1)*idsLength+4);//(2+1) for writing a word, (1+1) for writing a byte, 4 is a constant
 
+//	pthread_mutex_lock(&serial_port_mutex);
+
 	dxl_txrx_packet();//sends the packet
+
+//	pthread_mutex_unlock(&serial_port_mutex);
 
 	ids.resize(0);
 	data.resize(0);

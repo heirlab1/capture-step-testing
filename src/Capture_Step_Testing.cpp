@@ -28,9 +28,10 @@
 
 using namespace cv;
 
-//Vision vis;
+Vision vis;
 WalkEngine::Walk walk;
 BallFollow::BallFollower ballFollower(walk);
+//static	pthread_mutex_t serial_port_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *walk_thread_function(void *arg) {
 	walk.run();
@@ -38,15 +39,15 @@ void *walk_thread_function(void *arg) {
 	pthread_exit(0);
 }
 
-//void *vision(void *arg) {
-////	vis.init();
-//	while (1) {
-//		vis.setAction(CENTER_BALL);
-//		vis.nextFrame();
-//	}
-//
-//	pthread_exit(0);
-//}
+void *vision(void *arg) {
+//	vis.init();
+	while (1) {
+		vis.setAction(CENTER_BALL);
+		vis.nextFrame();
+	}
+
+	pthread_exit(0);
+}
 
 void *follow(void *arg) {
 	while (1) {
@@ -104,20 +105,22 @@ void init() {
 	Dynamixel::setSyncwriteStartAddress(30);
 	Dynamixel::sendSyncWrite();
 
-//	vis.init();
+	vis.init();
 }
 
 
 int main() {
+
+
 
 	pthread_t joystick_server;
 	pthread_attr_t joystick_attr;
 
 	pthread_attr_init(&joystick_attr);
 
-	pthread_create(&joystick_server, &joystick_attr, Joystick::run, 0);
-
-	while (Joystick::joy.buttons[Joystick::Y_BUTTON] != BUTTON_PRESSED);
+//	pthread_create(&joystick_server, &joystick_attr, Joystick::run, 0);
+//
+//	while (Joystick::joy.buttons[Joystick::Y_BUTTON] != BUTTON_PRESSED);
 
 	init();
 
@@ -139,32 +142,32 @@ int main() {
 	pthread_attr_init(&imu_attr);
 
 	// Busy wait
-	while (Joystick::joy.buttons[Joystick::X_BUTTON] != BUTTON_PRESSED);
+//	while (Joystick::joy.buttons[Joystick::X_BUTTON] != BUTTON_PRESSED);
 
 	pthread_create(&walking, &attr, walk_thread_function, 0);
-//	pthread_create(&vision_thread, &vision_attr, vision, 0);
+	pthread_create(&vision_thread, &vision_attr, vision, 0);
 	pthread_create(&ball_follower, &ball_attr, follow, 0);
-//	pthread_create(&imu_server, &imu_attr, IMU_Server::run, 0);
+	pthread_create(&imu_server, &imu_attr, IMU_Server::run, 0);
 
 	pthread_join(walking, NULL);
 
-//	pthread_cancel(vision_thread);
+	pthread_cancel(vision_thread);
 
-//	pthread_join(vision_thread, NULL);
+	pthread_join(vision_thread, NULL);
 
-//	printf("Joined Vision\n");
+	printf("Joined Vision\n");
 
 	pthread_cancel(ball_follower);
-	pthread_cancel(joystick_server);
+//	pthread_cancel(joystick_server);
 
 	printf("Ball Follower Cancelled\n");
 
 
 	pthread_join(ball_follower, NULL);
 
-//	pthread_cancel(imu_server);
-//
-//	pthread_join(imu_server, NULL);
+	pthread_cancel(imu_server);
+
+	pthread_join(imu_server, NULL);
 
 	printf("Ball Follower Joined\n");
 

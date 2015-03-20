@@ -7,9 +7,10 @@
 
 #include "IMUServer.h"
 #include <ctime>
-
+#include <pthread.h>
+#include "mutexes.h"
 ReadIMU imu_device;
-double timeout = 1.0/10.0;
+double timeout = 1.0/7.0;
 
 double getUnixTime() {
 	struct timespec tv;
@@ -38,8 +39,11 @@ void* IMU_Server::run(void * args) {
 	Cmps cmps;
 
 	while (1) {
-		imu_device.read_serial_xyz();
+
 		if ((getUnixTime() - last_time) > timeout) {
+//			pthread_mutex_lock(&serial_port_mutex);
+			imu_device.read_serial_xyz();
+//			pthread_mutex_unlock(&serial_port_mutex);
 			gyro = imu_device.get_gyro();
 			accl = imu_device.get_accl();
 			cmps = imu_device.get_cmps();

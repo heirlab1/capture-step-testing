@@ -1,5 +1,7 @@
 #include "ReadIMU.h"
 #include "IMUData.h"
+#include <pthread.h>
+#include "mutexes.h"
 
 
 
@@ -117,7 +119,9 @@ void  ReadIMU::read_serial_xyz () {
 	//printf("entering\n");
 	if(sensor_buf=='G'){
 		//printf("G\n");
+		pthread_mutex_lock(&serial_port_mutex);
 		read(fd, &sensor_buf, 1);
+		pthread_mutex_unlock(&serial_port_mutex);
 
 		//found the header, now moving on to the 3 axis values
 		if(sensor_buf=='\n'){
@@ -127,7 +131,9 @@ void  ReadIMU::read_serial_xyz () {
 
 				//look through a bunch of characters
 				for(int i = 0; i<20; i++){
+					pthread_mutex_lock(&serial_port_mutex);
 					read(fd, &sensor_buf, 1);
+					pthread_mutex_unlock(&serial_port_mutex);
 
 					//newline means that this axis number is over
 					if(sensor_buf=='\n'){
@@ -163,7 +169,9 @@ void  ReadIMU::read_serial_xyz () {
 
 	else if(sensor_buf=='A'){
 		//printf("A\n");
+		pthread_mutex_lock(&serial_port_mutex);
 		read(fd, &sensor_buf, 1);
+		pthread_mutex_unlock(&serial_port_mutex);
 
 		//found the header, now moving on to the 3 axis values
 		if(sensor_buf=='\n'){
@@ -173,7 +181,9 @@ void  ReadIMU::read_serial_xyz () {
 
 				//look through a bunch of characters
 				for(int i = 0; i<20; i++){
+					pthread_mutex_lock(&serial_port_mutex);
 					read(fd, &sensor_buf, 1);
+					pthread_mutex_unlock(&serial_port_mutex);
 
 					//newline means that this axis number is over
 					if(sensor_buf=='\n'){
@@ -208,7 +218,9 @@ void  ReadIMU::read_serial_xyz () {
 	}
 	else if(sensor_buf=='C'){
 		//printf("C\n");
+		pthread_mutex_lock(&serial_port_mutex);
 		read(fd, &sensor_buf, 1);
+		pthread_mutex_unlock(&serial_port_mutex);
 
 		//found the header, now moving on to the 3 axis values
 		if(sensor_buf=='\n'){
@@ -218,7 +230,9 @@ void  ReadIMU::read_serial_xyz () {
 
 				//look through a bunch of characters
 				for(int i = 0; i<20; i++){
+					pthread_mutex_lock(&serial_port_mutex);
 					read(fd, &sensor_buf, 1);
+					pthread_mutex_unlock(&serial_port_mutex);
 
 					//newline means that this axis number is over
 					if(sensor_buf=='\n'){
