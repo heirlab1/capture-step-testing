@@ -463,8 +463,8 @@ void Walk::run() {
 
 
 
-				if (Joystick::joy.buttons[Joystick::A_BUTTON] == BUTTON_PRESSED && last_buttons[Joystick::A_BUTTON] == BUTTON_RELEASED) {
-					last_buttons[Joystick::A_BUTTON] = BUTTON_PRESSED;
+				if (Joystick::joy.buttons[Joystick::RIGHT_BUMPER] == BUTTON_PRESSED && last_buttons[Joystick::RIGHT_BUMPER] == BUTTON_RELEASED) {
+					last_buttons[Joystick::RIGHT_BUMPER] = BUTTON_PRESSED;
 
 //					printf("\rA Button pressed once\r\n");
 					// Increment status and print prompt
@@ -493,15 +493,15 @@ void Walk::run() {
 					}
 
 
-				} else if (Joystick::joy.buttons[Joystick::A_BUTTON] == BUTTON_RELEASED) {
-					last_buttons[Joystick::A_BUTTON] = BUTTON_RELEASED;
+				} else if (Joystick::joy.buttons[Joystick::RIGHT_BUMPER] == BUTTON_RELEASED) {
+					last_buttons[Joystick::RIGHT_BUMPER] = BUTTON_RELEASED;
 				} else {
 
 				}
 
 
-				if (Joystick::joy.buttons[Joystick::B_BUTTON] == BUTTON_PRESSED && last_buttons[Joystick::B_BUTTON] == BUTTON_RELEASED) {
-					last_buttons[Joystick::B_BUTTON] = BUTTON_PRESSED;
+				if (Joystick::joy.buttons[Joystick::LEFT_BUMPER] == BUTTON_PRESSED && last_buttons[Joystick::LEFT_BUMPER] == BUTTON_RELEASED) {
+					last_buttons[Joystick::LEFT_BUMPER] = BUTTON_PRESSED;
 
 //					printf("\rB Button pressed once\r\n");
 					// Decrememt status and print prompt
@@ -530,10 +530,99 @@ void Walk::run() {
 					}
 //					printf("\rStatus: %d\n", (int)status);
 
-				} else if (Joystick::joy.buttons[Joystick::B_BUTTON] == BUTTON_RELEASED) {
-					last_buttons[Joystick::B_BUTTON] = BUTTON_RELEASED;
+				} else if (Joystick::joy.buttons[Joystick::LEFT_BUMPER] == BUTTON_RELEASED) {
+					last_buttons[Joystick::LEFT_BUMPER] = BUTTON_RELEASED;
 				} else {
 
+				}
+
+				if (Joystick::joy.buttons[Joystick::A_BUTTON] == BUTTON_PRESSED && last_buttons[Joystick::A_BUTTON] == BUTTON_RELEASED) {
+					// A Button pressed
+					last_buttons[Joystick::A_BUTTON] = BUTTON_PRESSED;
+					// Incrememt values
+					switch (status) {
+					case FREQUENCY:
+						frequency += 1;
+						printf("\rStatus = FREQUENCY\tValue = %d\n", frequency);
+						break;
+					case AMPLITUDE:
+						amplitude += 1;
+						printf("\rStatus = AMPLITUDE\tValue = %d\n", amplitude);
+						break;
+					case HEIGHT:
+						height += 1;
+						printf("\rStatus = HEIGHT   \tValue = %d\n", height);
+						break;
+					case FUDGE_FACTOR:
+						next_fudge_factor += 0.1;
+						printf("\rStatus = FUDGE_FACTOR\tValue = %f\n", next_fudge_factor);
+						break;
+					case STRAIGHT:
+						next_straight += 1;
+						if (next_straight > 1)
+							next_straight = 1;
+						switch (next_straight) {
+						case -1:
+							printf("\rStatus = STRAIGHT\tValue = LEFT\n");
+							break;
+						case 0:
+							printf("\rStatus = STRAIGHT\tValue = FORWARD\n");
+							break;
+						case 1:
+							printf("\rStatus = STRAIGHT\tVALUE = RIGHT\n");
+							break;
+						}
+
+						break;
+					}
+					// Print new values
+				} else if (Joystick::joy.buttons[Joystick::A_BUTTON] == BUTTON_RELEASED) {
+					last_buttons[Joystick::A_BUTTON] = BUTTON_RELEASED;
+				}
+
+				if (Joystick::joy.buttons[Joystick::B_BUTTON] == BUTTON_PRESSED && last_buttons[Joystick::B_BUTTON] == BUTTON_RELEASED) {
+					// A Button pressed
+					last_buttons[Joystick::B_BUTTON] = BUTTON_PRESSED;
+					// Incrememt values
+					switch (status) {
+					case FREQUENCY:
+						frequency -= 1;
+						printf("\rStatus = FREQUENCY\tValue = %d\n", frequency);
+						break;
+					case AMPLITUDE:
+						amplitude -= 1;
+						printf("\rStatus = AMPLITUDE\tValue = %d\n", amplitude);
+						break;
+					case HEIGHT:
+						height -= 1;
+						printf("\rStatus = HEIGHT   \tValue = %d\n", height);
+						break;
+					case FUDGE_FACTOR:
+						next_fudge_factor -= 0.1;
+						printf("\rStatus = FUDGE_FACTOR\tValue = %f\n", next_fudge_factor);
+						break;
+					case STRAIGHT:
+						next_straight -= 1;
+						if (next_straight < -1) {
+							next_straight = -1;
+						}
+						switch (next_straight) {
+						case -1:
+							printf("\rStatus = STRAIGHT\tValue = LEFT\n");
+							break;
+						case 0:
+							printf("\rStatus = STRAIGHT\tValue = FORWARD\n");
+							break;
+						case 1:
+							printf("\rStatus = STRAIGHT\tVALUE = RIGHT\n");
+							break;
+						}
+
+						break;
+					}
+					// Print new values
+				} else if (Joystick::joy.buttons[Joystick::B_BUTTON] == BUTTON_RELEASED) {
+					last_buttons[Joystick::B_BUTTON] = BUTTON_RELEASED;
 				}
 
 
@@ -849,14 +938,6 @@ void Walk::run() {
 				Dynamixel::setMotorPosition(i, 0.0, -1, 0.25);
 			}
 			Dynamixel::sendSyncWrite();
-		}
-		if (Joystick::joy.buttons[Joystick::RIGHT_BUMPER] == BUTTON_PRESSED) {
-			next_fudge_factor -= 0.01;
-			printf("New fudge_factor = %f\n", next_fudge_factor);
-		}
-		if (Joystick::joy.buttons[Joystick::LEFT_BUMPER] == BUTTON_PRESSED) {
-			next_fudge_factor += 0.01;
-			printf("New fudge_factor = %f\n", next_fudge_factor);
 		}
 
 		wait_key = (char)cvWaitKey(1);
