@@ -26,9 +26,13 @@
 #include "IMUData.h"
 #include "Joystick.h"
 
+//#define VISION
+
 using namespace cv;
 
+#ifdef VISION
 Vision vis;
+#endif
 WalkEngine::Walk walk;
 BallFollow::BallFollower ballFollower(walk);
 //static	pthread_mutex_t serial_port_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -39,6 +43,7 @@ void *walk_thread_function(void *arg) {
 	pthread_exit(0);
 }
 
+#ifdef VISION
 void *vision(void *arg) {
 //	vis.init();
 	while (1) {
@@ -48,6 +53,7 @@ void *vision(void *arg) {
 
 	pthread_exit(0);
 }
+#endif
 
 void *follow(void *arg) {
 	while (1) {
@@ -104,8 +110,9 @@ void init() {
 	Dynamixel::setSyncwriteEachLength(4);
 	Dynamixel::setSyncwriteStartAddress(30);
 	Dynamixel::sendSyncWrite();
-
+#ifdef VISION
 	vis.init();
+#endif
 }
 
 
@@ -118,9 +125,9 @@ int main() {
 
 	pthread_attr_init(&joystick_attr);
 
-//	pthread_create(&joystick_server, &joystick_attr, Joystick::run, 0);
-//
-//	while (Joystick::joy.buttons[Joystick::Y_BUTTON] != BUTTON_PRESSED);
+	pthread_create(&joystick_server, &joystick_attr, Joystick::run, 0);
+
+	while (Joystick::joy.buttons[Joystick::Y_BUTTON] != BUTTON_PRESSED);
 
 	init();
 
@@ -128,8 +135,12 @@ int main() {
 
 	pthread_t walking;
 	pthread_attr_t attr;
+
+#ifdef VISION
 	pthread_t vision_thread;
 	pthread_attr_t vision_attr;
+	pthread_attr_init(&vision_attr);
+#endif
 	pthread_t ball_follower;
 	pthread_attr_t ball_attr;
 
@@ -137,7 +148,6 @@ int main() {
 	pthread_attr_t imu_attr;
 
 	pthread_attr_init(&attr);
-	pthread_attr_init(&vision_attr);
 	pthread_attr_init(&ball_attr);
 	pthread_attr_init(&imu_attr);
 
@@ -145,15 +155,18 @@ int main() {
 //	while (Joystick::joy.buttons[Joystick::X_BUTTON] != BUTTON_PRESSED);
 
 	pthread_create(&walking, &attr, walk_thread_function, 0);
+#ifdef VISION
 	pthread_create(&vision_thread, &vision_attr, vision, 0);
+#endif
 	pthread_create(&ball_follower, &ball_attr, follow, 0);
 	pthread_create(&imu_server, &imu_attr, IMU_Server::run, 0);
 
 	pthread_join(walking, NULL);
-
+#ifdef VISION
 	pthread_cancel(vision_thread);
 
 	pthread_join(vision_thread, NULL);
+#endif
 
 	printf("Joined Vision\n");
 

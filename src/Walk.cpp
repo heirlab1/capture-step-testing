@@ -251,6 +251,8 @@ double forward_back_offset = 0.0;
 int next_straight = 1;
 double next_fudge_factor = 4;
 
+enum STATUS {FREQUENCY = 0, AMPLITUDE = 1, HEIGHT = 2, FUDGE_FACTOR = 3, STRAIGHT = 4} status;
+
 
 
 //configuration::data main_config;
@@ -406,6 +408,12 @@ void Walk::run() {
 	double cmps_y[samples];
 	double cmps_z[samples];
 
+	bool last_buttons[11];
+
+	for (int i = 0; i < 11; i++) {
+		last_buttons[i] = BUTTON_RELEASED;
+	}
+
 	std::ofstream good_out("good_datas.txt");
 	std::ofstream bad_out("bad_datas.txt");
 
@@ -419,12 +427,14 @@ void Walk::run() {
 
 	setLegLengths(0, LEG_CENTER);
 	Dynamixel::sendSyncWrite();
-	//	while (Joystick::joy.buttons[Joystick::START_BUTTON] != BUTTON_PRESSED);
+	while (Joystick::joy.buttons[Joystick::START_BUTTON] != BUTTON_PRESSED);
 
 	//	good_out << "Stp\tACC_X\tACC_Y\tACC_Z\tGYRO_X\tGYRO_Y\tGYRO_Z\tCMPS_X\tCMPS_Y\tCMPS_\n";
 
-	while (wait_key != 'c'/* && Joystick::joy.buttons[Joystick::BACK_BUTTON] != BUTTON_PRESSED*/) {
+	while (wait_key != 'c' && Joystick::joy.buttons[Joystick::BACK_BUTTON] != BUTTON_PRESSED) {
 		if (testing) {
+			// Update Joystick events whenever they are read
+
 			// Check to see if it's been long enough to update the motor positions
 			// Taking 20 discrete moments along the sine curve yields the 5/freq.
 			// As the freq is on a scale from 0 - 100, with 100 corresponding to 1 Hz.
@@ -450,6 +460,81 @@ void Walk::run() {
 				cmps_x[current_sin_index] = IMU::get(IMU::COMPASS_X);
 				cmps_y[current_sin_index] = IMU::get(IMU::COMPASS_Y);
 				cmps_z[current_sin_index] = IMU::get(IMU::COMPASS_Z);
+
+
+
+				if (Joystick::joy.buttons[Joystick::A_BUTTON] == BUTTON_PRESSED && last_buttons[Joystick::A_BUTTON] == BUTTON_RELEASED) {
+					last_buttons[Joystick::A_BUTTON] = BUTTON_PRESSED;
+
+//					printf("\rA Button pressed once\r\n");
+					// Increment status and print prompt
+
+					switch (status) {
+					case FREQUENCY:
+						status = AMPLITUDE;
+						printf("\rStatus = AMPLITUDE\tPrevious = FREQUENCY\t\tNext = HEIGHT\n");
+						break;
+					case AMPLITUDE:
+						status = HEIGHT;
+						printf("\rStatus = HEIGHT   \tPrevious = AMPLITUDE\t\tNext = FUDGE_FACTOR\n");
+						break;
+					case HEIGHT:
+						status = FUDGE_FACTOR;
+						printf("\rStatus = FUDGE_FACTOR\tPrevious = HEIGHT\t\tNext = STRAIGHT\n");
+						break;
+					case FUDGE_FACTOR:
+						status = STRAIGHT;
+						printf("\rStatus = STRAIGHT\tPrevious = FUDGE_FACTOR\t\tNext = FREQUENCY\n");
+						break;
+					case STRAIGHT:
+						status = FREQUENCY;
+						printf("\rStatus = FREQUENCY\tPrevious = STRAIGHT\t\tNext = AMPLITUDE\n");
+						break;
+					}
+
+
+				} else if (Joystick::joy.buttons[Joystick::A_BUTTON] == BUTTON_RELEASED) {
+					last_buttons[Joystick::A_BUTTON] = BUTTON_RELEASED;
+				} else {
+
+				}
+
+
+				if (Joystick::joy.buttons[Joystick::B_BUTTON] == BUTTON_PRESSED && last_buttons[Joystick::B_BUTTON] == BUTTON_RELEASED) {
+					last_buttons[Joystick::B_BUTTON] = BUTTON_PRESSED;
+
+//					printf("\rB Button pressed once\r\n");
+					// Decrememt status and print prompt
+
+					switch (status) {
+					case FREQUENCY:
+						status = STRAIGHT;
+						printf("\rStatus = STRAIGHT\tPrevious = FUDGE_FACTOR\t\tNext = FREQUENCY\n");
+						break;
+					case AMPLITUDE:
+						status = FREQUENCY;
+						printf("\rStatus = FREQUENCY\tPrevious = STRAIGHT\t\tNext = AMPLITUDE\n");
+						break;
+					case HEIGHT:
+						status = AMPLITUDE;
+						printf("\rStatus = AMPLITUDE\tPrevious = FREQUENCY\t\tNext = HEIGHT\n");
+						break;
+					case FUDGE_FACTOR:
+						status = HEIGHT;
+						printf("\rStatus = HEIGHT   \tPrevious = AMPLITUDE\t\tNext = FUDGE_FACTOR\n");
+						break;
+					case STRAIGHT:
+						status = FUDGE_FACTOR;
+						printf("\rStatus = FUDGE_FACTOR\tPrevious = HEIGHT\t\tNext = STRAIGHT\n");
+						break;
+					}
+//					printf("\rStatus: %d\n", (int)status);
+
+				} else if (Joystick::joy.buttons[Joystick::B_BUTTON] == BUTTON_RELEASED) {
+					last_buttons[Joystick::B_BUTTON] = BUTTON_RELEASED;
+				} else {
+
+				}
 
 
 
