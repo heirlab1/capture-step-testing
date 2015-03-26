@@ -9,6 +9,7 @@
 #include "Dynamixel.h"
 #include <cmath>
 #include "Motors.h"
+#include "Joystick.h"
 
 bool visionDisplayEnabled = true;
 
@@ -301,7 +302,7 @@ void Vision::calibrateThresholds() {
 
 
 	// Keep updating the image with the current thresholds until the user presses 'g'
-	while ((char)waitKey(80) != 'g') {
+	while ((char)waitKey(80) != 'g' && Joystick::joy.buttons[Joystick::LEFT_JOYSTICK_BUTTON] != BUTTON_PRESSED) {
 		Mat frame;
 		cap.read(frame);
 		Mat preprocessed = preprocess(frame);
@@ -330,7 +331,7 @@ void Vision::calibrateThresholds() {
 	cvCreateTrackbar("UpperB", "Test", &ballUpperV, 255, NULL);
 
 	// Keep updating the image with the current thresholds until the user presses 'b'
-	while ((char)waitKey(80) != 'b') {
+	while ((char)waitKey(80) != 'b' && Joystick::joy.buttons[Joystick::RIGHT_JOYSTICK_BUTTON] != BUTTON_PRESSED) {
 		Mat frame;
 		cap.read(frame);
 
@@ -627,7 +628,7 @@ std::vector<Point> Vision::determineCorners(std::vector<Point> refined_poi) {
 	std::vector<Point> corners;
 	corners.resize(8);
 
-	std::cout << "Refined Positions Vector Size: " << refined_poi.size() << std::endl;
+//	std::cout << "Refined Positions Vector Size: " << refined_poi.size() << std::endl;
 
 	if (refined_poi.size() >= 4  ) {
 
@@ -955,7 +956,7 @@ std::vector<Point> Vision::findIntersections(Rect boundRect, std::vector<std::ve
 			for (unsigned i = 0; i < indexes.size()-1; i++) {
 				int avg;
 				int sum = 0;
-				std::cout << "\t" << indexes[i] << " - " << indexes[i+1] << std::endl;
+//				std::cout << "\t" << indexes[i] << " - " << indexes[i+1] << std::endl;
 				for (int j = indexes[i]; j <= indexes[i+1]; j++) {
 					sum += points_of_interest[j].x;
 				}
@@ -1279,7 +1280,7 @@ double Vision::getDistanceToCenter(double known, double observed, double d, doub
 double Vision::getAngleFromCenter(double known, double observed, double d) {
 	// Determine the angle to the center of the goal
 	double bigTheta = 180 - toDegrees(asin(toRadians(observed/d))) - getTheta(known, observed);
-	std::cout << "Angle from back post: " << bigTheta-90 << std::endl;
+//	std::cout << "Angle from back post: " << bigTheta-90 << std::endl;
 	double g = GOAL_WIDTH/2;
 	double result = sin(toRadians(180-bigTheta))/((g/d) + cos(toRadians(180 - bigTheta)));
 	result = toDegrees(atan(result));
@@ -1463,13 +1464,13 @@ void Vision::determinePosition(RotatedRect boundRect, Mat &imgDraw, Mat &frame) 
 	}
 
 	if (top_left_index >= 0)
-		std::cout << "Top Left: (" << refined[top_left_index].x << ", " << refined[top_left_index].y << ")" << std::endl;
+//		std::cout << "Top Left: (" << refined[top_left_index].x << ", " << refined[top_left_index].y << ")" << std::endl;
 	if (top_right_index >= 0)
-		std::cout << "Top right: (" << refined[top_right_index].x << ", " << refined[top_right_index].y << ")" << std::endl;
+//		std::cout << "Top right: (" << refined[top_right_index].x << ", " << refined[top_right_index].y << ")" << std::endl;
 	if (bot_left_index >= 0)
-		std::cout << "Bottom Left: (" << refined[bot_left_index].x << ", " << refined[bot_left_index].y << ")" << std::endl;
+//		std::cout << "Bottom Left: (" << refined[bot_left_index].x << ", " << refined[bot_left_index].y << ")" << std::endl;
 	if (bot_right_index >= 0)
-		std::cout << "Bottom Right: (" << refined[bot_right_index].x << ", " << refined[bot_right_index].y << ")" << std::endl;
+//		std::cout << "Bottom Right: (" << refined[bot_right_index].x << ", " << refined[bot_right_index].y << ")" << std::endl;
 
 	int known_points = (int)refined.size();
 	double distance_from_cam = -1;
@@ -1507,7 +1508,7 @@ void Vision::determinePosition(RotatedRect boundRect, Mat &imgDraw, Mat &frame) 
 //	double observed_length2 = getLength(distance_from_cam_2, getDistance(rect_points[left_top], rect_points[right_top]));
 //	double theta2 = getAngleFromCenter(GOAL_WIDTH, observed_length2, distance_from_cam_2);
 	distance[distance_index] = distance_from_cam_2;
-	distance_confidence[distance_index] = known_points/4.0;
+//	distance_confidence[distance_index] = known_points/4.0;
 	distance_index = (distance_index + 1) % history_size;
 //	angle[angle_index] = theta2;
 //	angle_confidence[angle_index] = known_points/4.0;
@@ -1516,9 +1517,9 @@ void Vision::determinePosition(RotatedRect boundRect, Mat &imgDraw, Mat &frame) 
 
 	// If we have a reading on the distance, update our position estimation
 	if (distance_from_cam > 0) {
-		std::cout << "Distance from camera to near post: " << distance_from_cam/100.0 << "m" << std::endl;
+//		std::cout << "Distance from camera to near post: " << distance_from_cam/100.0 << "m" << std::endl;
 		distance[distance_index-1] = distance_from_cam;
-		distance_confidence[distance_index-1] = (known_points == 3) ? 0.75 : 0.25;
+//		distance_confidence[distance_index-1] = (known_points == 3) ? 0.75 : 0.25;
 	}
 	// If we have a reading on the angle, update our angle estimation
 //	if (theta > -100) {
@@ -1736,7 +1737,7 @@ void Vision::nextFrame() {
 	putText(frame, text, Point(10, 20), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(0, 255, 255), 1, CV_AA);
 
 	sprintf(text, "Distance to ball: %d", getBallDistance());
-	std::cout << "Distance to ball: " << getBallDistance();
+//	std::cout << "Distance to ball: " << getBallDistance();
 	putText(frame, text, Point(10, 100), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(0, 255, 255), 1, CV_AA);
 
 	// Wait allows OpenCV to update the image
@@ -2016,7 +2017,7 @@ void Vision::center_ball(Mat frame) {
 				Dynamixel::setMotorPosition(24, head_up_angle, -1, 1.0/30);
 				Motors::setMotorPosition(24, head_up_angle);
 //				motorController->moveHead(MUL8_HEAD_DOWN, speed);
-				std::cout << "I am going to detect the ball distance" << std::endl;
+//				std::cout << "I am going to detect the ball distance" << std::endl;
 				ball_distance[ball_index] = detectBallDistance(centerRec);
 				ball_index = (ball_index + 1) % history_size;
 			}
@@ -2024,7 +2025,7 @@ void Vision::center_ball(Mat frame) {
 //				if (motorController->headLeftRightIsMoving() || motorController->headUpDownIsMoving()) {
 //					motorController->stopHead();
 //				}
-				std::cout << "I am going to detect the ball distance" << std::endl;
+//				std::cout << "I am going to detect the ball distance" << std::endl;
 				ball_distance[ball_index] = detectBallDistance(centerRec);
 				ball_index = (ball_index + 1) % history_size;
 			}

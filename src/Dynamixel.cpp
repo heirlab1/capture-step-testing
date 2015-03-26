@@ -159,7 +159,7 @@ int Dynamixel::getZeroPose(int motor) {
 		return 2048;
 	}
 	else if (motor == 24) {
-		return 1070;
+		return 2048;
 	}
 	else if (motor == 13) {
 		return 1000;

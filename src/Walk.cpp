@@ -235,10 +235,10 @@ pthread_mutex_t modifier_mutex = PTHREAD_MUTEX_INITIALIZER;
 std::vector<double> sin_values;
 std::vector<std::vector<double> > left_leg_values;
 std::vector<std::vector<double> > right_leg_values;
-int frequency = 12;//25;// 60;
-int amplitude = 5;
+int frequency = 19;//12;//25;// 60;
+int amplitude = 4;//5;
 int samples = 16;//32;// 64;
-int height = 26;
+int height = 17;//26;
 double last_clock = 0;
 //int fudge_factor = 4;
 double fudge_factor = 50;//16
@@ -248,8 +248,8 @@ int hip_multiplier = 2;
 int ankle_multiplier = 1;
 int straight = 1;
 double forward_back_offset = 0.0;
-int next_straight = 1;
-double next_fudge_factor = 4;
+int next_straight = 0;
+double next_fudge_factor = 3.4;//4;
 
 enum STATUS {FREQUENCY = 0, AMPLITUDE = 1, HEIGHT = 2, FUDGE_FACTOR = 3, STRAIGHT = 4} status;
 
@@ -627,6 +627,11 @@ void Walk::run() {
 
 
 
+				Dynamixel::setMotorPosition(13, ((double)Joystick::joy.axis[Joystick::RIGHT_Y] / (-30000.0)), 100, /*1.0/((double)frequency)*/-1);
+				Dynamixel::setMotorPosition(14, ((double)Joystick::joy.axis[Joystick::RIGHT_Y] / (-30000.0)), 100, /*1.0/((double)frequency)*/-1);
+
+
+
 				//				if ((acc_x - acc_x_averages[current_sin_index]) > acc_x_std_dev) {
 				//					// TODO Let user know we've exceeded std deviation
 				//					Dynamixel::setMotorPosition(15, PI/4, -1, 0.25);
@@ -682,74 +687,74 @@ void Walk::run() {
 				//				Dynamixel::setInitialPose(4, -5);
 				//				printf("HAILP!!!!!!\n");
 				//			}
-				//			if (Joystick::joy.axis[Joystick::LEFT_X] < 0) {
-				//				// Lean to the left
-				//				Dynamixel::setInitialPose(5, Joystick::joy.axis[Joystick::LEFT_X]/-5000);
-				//				Dynamixel::setInitialPose(6, Joystick::joy.axis[Joystick::LEFT_X]/-5000);
-				//				//				Dynamixel::setInitialPose(3, 5);
-				//				//				Dynamixel::setInitialPose(4, -5);
-				//				printf("Leaning left\n");
-				//			} else if (Joystick::joy.axis[Joystick::LEFT_X > 0]) {
-				//				// Lean to the right
-				//				Dynamixel::setInitialPose(5, Joystick::joy.axis[Joystick::LEFT_X]/-5000);
-				//				Dynamixel::setInitialPose(6, Joystick::joy.axis[Joystick::LEFT_X]/-5000);
-				//				//				Dynamixel::setInitialPose(3, -5);
-				//				//				Dynamixel::setInitialPose(4, 5);
-				//				printf("Leaning right\n");
-				//			}
-				//			if (Joystick::joy.axis[Joystick::LEFT_Y] > 0) {
-				//				// Lean back
-				//				Dynamixel::setInitialPose(3, Joystick::joy.axis[Joystick::LEFT_Y]/-5000);
-				//				Dynamixel::setInitialPose(4, Joystick::joy.axis[Joystick::LEFT_Y]/5000);
-				//				//				Dynamixel::setInitialPose(5, -5);
-				//				//				Dynamixel::setInitialPose(6, -5);
-				//				printf("Leaning back\n");
-				//			} else if (Joystick::joy.axis[Joystick::LEFT_Y] < 0) {
-				//				// Lean forward
-				//				Dynamixel::setInitialPose(3, Joystick::joy.axis[Joystick::LEFT_Y]/-5000);
-				//				Dynamixel::setInitialPose(4, Joystick::joy.axis[Joystick::LEFT_Y]/5000);
-				//				//				Dynamixel::setInitialPose(5, 5);
-				//				//				Dynamixel::setInitialPose(6, 5);
-				//				printf("Leaning forwrad\n");
-				//			}
+							if (Joystick::joy.axis[Joystick::LEFT_X] < 0) {
+								// Lean to the left
+								Dynamixel::setInitialPose(5, Joystick::joy.axis[Joystick::LEFT_X]/-5000);
+								Dynamixel::setInitialPose(6, Joystick::joy.axis[Joystick::LEFT_X]/-5000);
+								//				Dynamixel::setInitialPose(3, 5);
+								//				Dynamixel::setInitialPose(4, -5);
+								printf("Leaning left\n");
+							} else if (Joystick::joy.axis[Joystick::LEFT_X > 0]) {
+								// Lean to the right
+								Dynamixel::setInitialPose(5, Joystick::joy.axis[Joystick::LEFT_X]/-5000);
+								Dynamixel::setInitialPose(6, Joystick::joy.axis[Joystick::LEFT_X]/-5000);
+								//				Dynamixel::setInitialPose(3, -5);
+								//				Dynamixel::setInitialPose(4, 5);
+								printf("Leaning right\n");
+							}
+							if (Joystick::joy.axis[Joystick::LEFT_Y] > 0) {
+								// Lean back
+								Dynamixel::setInitialPose(3, Joystick::joy.axis[Joystick::LEFT_Y]/-5000);
+								Dynamixel::setInitialPose(4, Joystick::joy.axis[Joystick::LEFT_Y]/5000);
+								//				Dynamixel::setInitialPose(5, -5);
+								//				Dynamixel::setInitialPose(6, -5);
+								printf("Leaning back\n");
+							} else if (Joystick::joy.axis[Joystick::LEFT_Y] < 0) {
+								// Lean forward
+								Dynamixel::setInitialPose(3, Joystick::joy.axis[Joystick::LEFT_Y]/-5000);
+								Dynamixel::setInitialPose(4, Joystick::joy.axis[Joystick::LEFT_Y]/5000);
+								//				Dynamixel::setInitialPose(5, 5);
+								//				Dynamixel::setInitialPose(6, 5);
+								printf("Leaning forwrad\n");
+							}
 
 				double head_up = Motors::getMotorPosition(24);
 				double head_left = Motors::getMotorPosition(23);
 				forward_back_offset = 0.0;
 
-				//				if (head_left < PI/-6.0) {
-				//					Dynamixel::setMotorPosition(13, 0.0, -1, 0.5);
-				//					Dynamixel::setMotorPosition(14, 0.0, -1, 0.5);
-				//					//					if (current_sin_index == 0) {
-				//					//						straight = 2;
-				//					//						fudge_factor = 5;
-				//					//					}
-				//				}
-				//				else if (head_left > PI/6.0) {
-				//					Dynamixel::setMotorPosition(13, 0.0, -1, 0.5);
-				//					Dynamixel::setMotorPosition(14, 0.0, -1, 0.5);
-				//					//					if (current_sin_index == 0) {
-				//					//						straight = 0;
-				//					//						fudge_factor = 5;
-				//					//					}
-				//				}
-				//				else {
-				//					if (head_up < PI/-4.0) {
-				//						Dynamixel::setMotorPosition(13, PI/-4.0, -1, 0.5);
-				//						Dynamixel::setMotorPosition(14, PI/-4.0, -1, 0.5);
-				//					} else {
-				//						Dynamixel::setMotorPosition(13, PI/-6.0, -1, 0.5);
-				//						Dynamixel::setMotorPosition(14, PI/-6.0, -1, 0.5);
-				//					}
-				//					//					if (current_sin_index == 0) {
-				//					//						straight = 1;
-				//					//						fudge_factor = 4;
-				//					//					}
-				//				}
-
-				//				if (head_up < PI/-6.0) {
-				//					forward_back_offset = 0.01;
-				//				}
+//								if (head_left < PI/-6.0) {
+//									Dynamixel::setMotorPosition(13, 0.0, -1, 0.5);
+//									Dynamixel::setMotorPosition(14, 0.0, -1, 0.5);
+//									//					if (current_sin_index == 0) {
+//									//						straight = 2;
+//									//						fudge_factor = 5;
+//									//					}
+//								}
+//								else if (head_left > PI/6.0) {
+//									Dynamixel::setMotorPosition(13, 0.0, -1, 0.5);
+//									Dynamixel::setMotorPosition(14, 0.0, -1, 0.5);
+//									//					if (current_sin_index == 0) {
+//									//						straight = 0;
+//									//						fudge_factor = 5;
+//									//					}
+//								}
+//								else {
+//									if (head_up < PI/-4.0) {
+//										Dynamixel::setMotorPosition(13, PI/-4.0, -1, 0.5);
+//										Dynamixel::setMotorPosition(14, PI/-4.0, -1, 0.5);
+//									} else {
+//										Dynamixel::setMotorPosition(13, PI/-6.0, -1, 0.5);
+//										Dynamixel::setMotorPosition(14, PI/-6.0, -1, 0.5);
+//									}
+//									//					if (current_sin_index == 0) {
+//									//						straight = 1;
+//									//						fudge_factor = 4;
+//									//					}
+//								}
+//
+//								if (head_up < PI/-6.0) {
+//									forward_back_offset = 0.01;
+//								}
 
 				if (current_sin_index == 0) {
 					pthread_mutex_lock(&modifier_mutex);
@@ -782,7 +787,7 @@ void Walk::run() {
 					Dynamixel::setMotorPosition(12,legValues[LEFT_ANKLE], -1, 1.0/(((double)frequency)/*16*/));
 
 					// If walking straight
-					if (straight == 1) {
+					if (straight == 0) {
 						Dynamixel::setMotorPosition(3, -1*sin_values[current_sin_index]/((double)fudge_factor) /* - forward_back_offset */+
 								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(9, sin_values[current_sin_index]/(4*(double)fudge_factor) +
@@ -792,7 +797,7 @@ void Walk::run() {
 						Dynamixel::setMotorPosition(2, 0.0, -1, 1.0/((double)frequency));
 					}
 					// If turning Left
-					else if (straight == 0) {
+					else if (straight == -1) {
 						Dynamixel::setMotorPosition(3, /*-1*sin_values[current_sin_index]/((double)fudge_factor)*/ -0.1 +
 								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(9, /*sin_values[current_sin_index]/(2*(double)fudge_factor)*/ -0.1 +
@@ -828,7 +833,7 @@ void Walk::run() {
 					Dynamixel::setMotorPosition(12,legValues[THETA_ANKLE], -1, 1.0/(((double)frequency)/*16*/));
 
 					// If walking straight
-					if (straight == 1) {
+					if (straight == 0) {
 						Dynamixel::setMotorPosition(4, sin_values[current_sin_index]/((double)fudge_factor) + //forward_back_offset +
 								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(10, -1*sin_values[current_sin_index]/(2*(double)fudge_factor) +
@@ -838,7 +843,7 @@ void Walk::run() {
 						Dynamixel::setMotorPosition(2, 0.0, -1, 1.0/((double)frequency));
 					}
 					// Turning Left
-					else if (straight == 0) {
+					else if (straight == -1) {
 						Dynamixel::setMotorPosition(4, /*sin_values[current_sin_index]/((double)fudge_factor)*/ -0.1 +
 								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(10, /* -1*sin_values[current_sin_index]/(2*(double)fudge_factor)*/ -0.1 +
@@ -876,11 +881,8 @@ void Walk::run() {
 					setLegLengths(0, LEG_CENTER);
 				}
 
-				Dynamixel::setMotorPosition(13, ((double)Joystick::joy.axis[Joystick::RIGHT_Y] / (-30000.0)), 100, /*1.0/((double)frequency)*/-1);
-				Dynamixel::setMotorPosition(14, ((double)Joystick::joy.axis[Joystick::RIGHT_Y] / (-30000.0)), 100, /*1.0/((double)frequency)*/-1);
-
-
 				current_sin_index = (current_sin_index + 1) % samples;
+
 
 				if (current_sin_index == samples) {
 					current_sin_index = 0;

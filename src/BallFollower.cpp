@@ -29,10 +29,10 @@ BallFollower::~BallFollower() {
 
 void BallFollower::run() {
 //	while (1) {
-	// The printf statements are needed to stop program from hanging when thread cancelled
-//		printf("Getting head position\n");
+//	// The printf statements are needed to stop program from hanging when thread cancelled
+////		printf("Getting head position\n");
 //		double head_left = Motors::getMotorPosition(23);
-////		printf("Got head position\n");
+//		printf("Got head position\n");
 //		if (head_left < PI/-6.0) {
 //			walk.turn_right();
 //		}

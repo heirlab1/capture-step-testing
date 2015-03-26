@@ -26,7 +26,7 @@
 #include "IMUData.h"
 #include "Joystick.h"
 
-//#define VISION
+#define VISION
 
 using namespace cv;
 
@@ -152,10 +152,12 @@ int main() {
 	pthread_attr_init(&imu_attr);
 
 	// Busy wait
-//	while (Joystick::joy.buttons[Joystick::X_BUTTON] != BUTTON_PRESSED);
+	while (Joystick::joy.buttons[Joystick::X_BUTTON] != BUTTON_PRESSED);
 
 	pthread_create(&walking, &attr, walk_thread_function, 0);
 #ifdef VISION
+
+	while (Joystick::joy.buttons[Joystick::START_BUTTON] != BUTTON_PRESSED);
 	pthread_create(&vision_thread, &vision_attr, vision, 0);
 #endif
 	pthread_create(&ball_follower, &ball_attr, follow, 0);
