@@ -1,3 +1,8 @@
+/*
+ * ReadIMU.cpp
+ *
+ * Author: Adam Stroud
+ */
 #include "ReadIMU.h"
 #include "IMUData.h"
 #include <pthread.h>

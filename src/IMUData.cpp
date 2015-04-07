@@ -2,7 +2,7 @@
  * IMUData.cpp
  *
  *  Created on: Feb 19, 2015
- *      Author: mul8
+ *      Author: Kellen Carey
  */
 
 #include "IMUData.h"

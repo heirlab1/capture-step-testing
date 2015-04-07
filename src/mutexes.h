@@ -2,7 +2,7 @@
  * mutexes.h
  *
  *  Created on: Mar 20, 2015
- *      Author: emulate
+ *      Author: Kellen Carey
  */
 
 #ifndef MUTEXES_H_

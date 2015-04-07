@@ -1,3 +1,8 @@
+/*
+ * config_parser.h
+ *
+ * Modified by: Kellen Carey
+ */
 // From code found on: http://www.cplusplus.com/forum/general/21115/
 #ifndef CONFIG_PARSER_H
 #define CONFIG_PARSER_H

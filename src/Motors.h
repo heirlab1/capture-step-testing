@@ -2,7 +2,7 @@
  * Motors.h
  *
  *  Created on: Feb 5, 2015
- *      Author: mul8
+ *      Author: Kellen Carey
  */
 
 #ifndef MOTORS_H_

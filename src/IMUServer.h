@@ -2,7 +2,7 @@
  * IMUServer.h
  *
  *  Created on: Feb 24, 2015
- *      Author: mul8
+ *      Author: Kellen Carey
  */
 
 #ifndef IMUSERVER_H_

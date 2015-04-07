@@ -2,7 +2,7 @@
  * Dynamixel.cpp
  *
  *  Created on: Dec 8, 2014
- *      Author: unicorn
+ *      Author: Kellen Carey
  */
 
 #include "Dynamixel.h"
@@ -26,7 +26,7 @@
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-bool new_robot = false;
+bool new_robot = true;
 
 #define PI 3.14159265
 
@@ -155,17 +155,27 @@ int Dynamixel::getZeroPose(int motor) {
 		//		return initial_poses[motor-1];
 		return pos[motor-1];
 	}
-	else if (motor == 23) {
+	else if (motor == 23 || motor == 19) {
 		return 2048;
 	}
-	else if (motor == 24) {
+	else if (motor == 24 || motor == 20) {
 		return 2048;
 	}
 	else if (motor == 13) {
-		return 1000;
+		if (new_robot) {
+			return 2048;
+		}
+		else {
+			return 1000;
+		}
 	}
 	else if (motor == 14) {
-		return 2600;
+		if (new_robot) {
+			return 2048;
+		}
+		else {
+			return 2600;
+		}
 	}
 	else {
 		return dxl_read_word(motor, P_PRESENT_POSITION);
@@ -185,6 +195,15 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 //	printf("Motor %d Locking Mutex... ", motor);
 	pthread_mutex_lock(&mutex);
 //	printf("Mutext locked\n");
+
+	// Determine if this is the new robot or not
+	// The new robot's head uses motors 19 and 20, while the old robot uses head motors 23 and 24
+	if (new_robot && motor == 23) {
+		motor = 19;
+	}
+	else if (new_robot && motor == 24) {
+		motor == 20;
+	}
 	// Convert angle to motor positions
 	int motor_positions = (int)(angle/(2.0*PI) * 4096.0);
 	int present_position = dxl_read_word(motor, P_PRESENT_POSITION);
@@ -257,6 +276,7 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 			goal_position = zero_position - motor_positions;
 			newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
 			newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
+			printf("\rMotor 9 position: %d\n", goal_position);
 		} else {
 			goal_position = zero_position + motor_positions;
 			newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
@@ -270,6 +290,7 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 			goal_position = zero_position - motor_positions;
 			newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
 			newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
+			printf("\rMotor 10 position: %d\n", goal_position);
 		} else {
 			goal_position = zero_position + motor_positions;
 			newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));

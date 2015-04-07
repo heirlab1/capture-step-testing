@@ -1,3 +1,6 @@
+/*
+ * Author: Adam Stroud
+ */
 #ifndef READ_IMU_H_
 #define READ_IMU_H_
 

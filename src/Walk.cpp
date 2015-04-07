@@ -2,7 +2,7 @@
  * Walk.cpp
  *
  *  Created on: Feb 12, 2015
- *      Author: mul8
+ *      Author: Kellen Carey
  */
 
 #include "Walk.h"
@@ -228,7 +228,7 @@ double acc_z_std_dev = 1976.129093;
 namespace WalkEngine {
 #define PI 3.14159265
 #define E  2.718
-int LEG_CENTER = 32;
+int LEG_CENTER = 36;
 
 pthread_mutex_t modifier_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -790,7 +790,7 @@ void Walk::run() {
 					if (straight == 0) {
 						Dynamixel::setMotorPosition(3, -1*sin_values[current_sin_index]/((double)fudge_factor) /* - forward_back_offset */+
 								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
-						Dynamixel::setMotorPosition(9, sin_values[current_sin_index]/(4*(double)fudge_factor) +
+						Dynamixel::setMotorPosition(9, sin_values[current_sin_index]/(2*(double)fudge_factor) +
 								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
 
 						Dynamixel::setMotorPosition(1, 0.0, -1, 1.0/((double)frequency));

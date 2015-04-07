@@ -1,9 +1,6 @@
 //============================================================================
 // Name        : Capture_Step_Testing.cpp
 // Author      : Kellen Carey
-// Version     :
-// Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
 //============================================================================
 
 #include "iostream"
@@ -26,7 +23,7 @@
 #include "IMUData.h"
 #include "Joystick.h"
 
-#define VISION
+//#define VISION
 
 using namespace cv;
 

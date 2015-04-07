@@ -2,7 +2,7 @@
  * IMUData.h
  *
  *  Created on: Feb 19, 2015
- *      Author: mul8
+ *      Author: Kellen Carey
  */
 
 #ifndef IMUDATA_H_

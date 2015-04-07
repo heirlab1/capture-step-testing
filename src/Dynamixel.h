@@ -2,7 +2,7 @@
  * Dynamixel.h
  *
  *  Created on: Dec 8, 2014
- *      Author: unicorn
+ *      Author: Kellen Carey
  */
 
 #ifndef DYNAMIXEL_H_

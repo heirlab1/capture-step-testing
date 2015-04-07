@@ -2,7 +2,7 @@
  * JoystickClass.h
  *
  *  Created on: Mar 5, 2015
- *      Author: mul8
+ *      Author: Kellen Carey
  */
 
 #ifndef JOYSTICKCLASS_H_

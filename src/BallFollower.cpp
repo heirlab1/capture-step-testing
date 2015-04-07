@@ -2,7 +2,7 @@
  * BallFollower.cpp
  *
  *  Created on: Feb 12, 2015
- *      Author: mul8
+ *      Author: Kellen Carey
  */
 
 #include "BallFollower.h"

@@ -2,7 +2,7 @@
  * Walk.h
  *
  *  Created on: Feb 12, 2015
- *      Author: mul8
+ *      Author: Kellen Carey
  */
 
 #ifndef WALK_H_
