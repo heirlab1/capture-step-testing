@@ -235,10 +235,10 @@ pthread_mutex_t modifier_mutex = PTHREAD_MUTEX_INITIALIZER;
 std::vector<double> sin_values;
 std::vector<std::vector<double> > left_leg_values;
 std::vector<std::vector<double> > right_leg_values;
-int frequency = 19;//12;//25;// 60;
-int amplitude = 4;//5;
+int frequency = 17;//12;//25;// 60;
+int amplitude = 2;//4;//5;
 int samples = 16;//32;// 64;
-int height = 17;//26;
+int height = 11;//26;
 double last_clock = 0;
 //int fudge_factor = 4;
 double fudge_factor = 50;//16
@@ -249,7 +249,7 @@ int ankle_multiplier = 1;
 int straight = 1;
 double forward_back_offset = 0.0;
 int next_straight = 0;
-double next_fudge_factor = 3.4;//4;
+double next_fudge_factor = 3.6;//4;
 
 enum STATUS {FREQUENCY = 0, AMPLITUDE = 1, HEIGHT = 2, FUDGE_FACTOR = 3, STRAIGHT = 4} status;
 
@@ -630,8 +630,8 @@ void Walk::run() {
 
 
 
-				Dynamixel::setMotorPosition(13, ((double)Joystick::joy.axis[Joystick::RIGHT_Y] / (-30000.0)), 100, /*1.0/((double)frequency)*/-1);
-				Dynamixel::setMotorPosition(14, ((double)Joystick::joy.axis[Joystick::RIGHT_Y] / (-30000.0)), 100, /*1.0/((double)frequency)*/-1);
+				Dynamixel::setMotorPosition(13, ((double)Joystick::joy.axis[Joystick::RIGHT_Y] / (-30000.0)) - 0.5, 100, /*1.0/((double)frequency)*/-1);
+				Dynamixel::setMotorPosition(14, ((double)Joystick::joy.axis[Joystick::RIGHT_Y] / (-30000.0)) - 0.5, 100, /*1.0/((double)frequency)*/-1);
 
 
 
@@ -793,13 +793,13 @@ void Walk::run() {
 					if (straight == 0) {
 						Dynamixel::setMotorPosition(3, -1*sin_values[current_sin_index]/((double)fudge_factor) /* - forward_back_offset */+
 								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
-						Dynamixel::setMotorPosition(9, sin_values[current_sin_index]/(2*(double)fudge_factor) +
+						Dynamixel::setMotorPosition(9, sin_values[current_sin_index]/(2*(double)fudge_factor) + 0.2 +
 								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
-						printf("\rSet motor 9 position to: %f", sin_values[current_sin_index]/(2*(double)fudge_factor) +
-								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])));
-						printf("\racos internal: %f", ((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE]));
-						printf("\r modified L_ONE: %f", modified[L_ONE]);
-						printf("\racos: %f", acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])));
+//						printf("\rSet motor 9 position to: %f", sin_values[current_sin_index]/(2*(double)fudge_factor) +
+//								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])));
+//						printf("\racos internal: %f", ((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE]));
+//						printf("\r modified L_ONE: %f", modified[L_ONE]);
+//						printf("\racos: %f", acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])));
 						Dynamixel::setMotorPosition(1, 0.0, -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(2, 0.0, -1, 1.0/((double)frequency));
 					}
@@ -809,8 +809,8 @@ void Walk::run() {
 								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(9, /*sin_values[current_sin_index]/(2*(double)fudge_factor)*/ -0.1 +
 								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
-						printf("\rSet motor 9 position to: %f", -0.1 +
-								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])));
+//						printf("\rSet motor 9 position to: %f", -0.1 +
+//								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])));
 						Dynamixel::setMotorPosition(1, sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(2, sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
 					}
@@ -820,8 +820,8 @@ void Walk::run() {
 								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(9, /*sin_values[current_sin_index]/(2*(double)fudge_factor)*/ -0.1 +
 								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
-						printf("\rSet motor 9 position to: %f", -0.1 +
-								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])));
+//						printf("\rSet motor 9 position to: %f", -0.1 +
+//								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])));
 						Dynamixel::setMotorPosition(1, -1*sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(2, -1*sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
 
@@ -845,10 +845,10 @@ void Walk::run() {
 					if (straight == 0) {
 						Dynamixel::setMotorPosition(4, sin_values[current_sin_index]/((double)fudge_factor) + //forward_back_offset +
 								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
-						Dynamixel::setMotorPosition(10, -1*sin_values[current_sin_index]/(2*(double)fudge_factor) +
+						Dynamixel::setMotorPosition(10, -1*sin_values[current_sin_index]/(2*(double)fudge_factor) + 0.2 +
 								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
-						printf("\rSet motor 10 position to: %f", -1*sin_values[current_sin_index]/(2*(double)fudge_factor) +
-								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])));
+//						printf("\rSet motor 10 position to: %f", -1*sin_values[current_sin_index]/(2*(double)fudge_factor) +
+//								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])));
 						Dynamixel::setMotorPosition(1, 0.0, -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(2, 0.0, -1, 1.0/((double)frequency));
 					}
@@ -858,8 +858,8 @@ void Walk::run() {
 								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(10, /* -1*sin_values[current_sin_index]/(2*(double)fudge_factor)*/ -0.1 +
 								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
-						printf("\rSet motor 10 position to: %f", -0.1 +
-								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])));
+//						printf("\rSet motor 10 position to: %f", -0.1 +
+//								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])));
 						Dynamixel::setMotorPosition(1, sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(2, sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
 					}
@@ -869,8 +869,8 @@ void Walk::run() {
 								acos((((modified[L_ONE]*modified[L_ONE]) + 70)/(37*modified[L_ONE]))), -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(10, /* -1*sin_values[current_sin_index]/(2*(double)fudge_factor)*/ -0.1 +
 								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])), -1, 1.0/((double)frequency));
-						printf("\rSet motor 10 postition to %f", -0.1 +
-								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])));
+//						printf("\rSet motor 10 postition to %f", -0.1 +
+//								acos(((modified[L_ONE]*modified[L_ONE]) - 70)/(33*modified[L_ONE])));
 						Dynamixel::setMotorPosition(1, -1*sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
 						Dynamixel::setMotorPosition(2, -1*sin_values[current_sin_index]/((double)fudge_factor*3.0), -1, 1.0/((double)frequency));
 					}

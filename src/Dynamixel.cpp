@@ -276,7 +276,7 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 			goal_position = zero_position - motor_positions;
 			newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
 			newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
-			printf("\rMotor 9 position: %d\n", goal_position);
+//			printf("\rMotor 9 position: %d\n", goal_position);
 		} else {
 			goal_position = zero_position + motor_positions;
 			newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
@@ -290,7 +290,7 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 			goal_position = zero_position - motor_positions;
 			newData.push_back(dxl_get_lowbyte(zero_position - motor_positions));
 			newData.push_back(dxl_get_highbyte(zero_position - motor_positions));
-			printf("\rMotor 10 position: %d\n", goal_position);
+//			printf("\rMotor 10 position: %d\n", goal_position);
 		} else {
 			goal_position = zero_position + motor_positions;
 			newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
