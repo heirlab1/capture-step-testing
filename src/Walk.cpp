@@ -235,10 +235,10 @@ pthread_mutex_t modifier_mutex = PTHREAD_MUTEX_INITIALIZER;
 std::vector<double> sin_values;
 std::vector<std::vector<double> > left_leg_values;
 std::vector<std::vector<double> > right_leg_values;
-int frequency = 17;//12;//25;// 60;
-int amplitude = 2;//4;//5;
+int frequency = 7;//17;//12;//25;// 60;
+int amplitude = 1;//4;//5;
 int samples = 16;//32;// 64;
-int height = 11;//26;
+int height = 0;//11;//26;
 double last_clock = 0;
 //int fudge_factor = 4;
 double fudge_factor = 50;//16
@@ -249,7 +249,7 @@ int ankle_multiplier = 1;
 int straight = 1;
 double forward_back_offset = 0.0;
 int next_straight = 0;
-double next_fudge_factor = 3.6;//4;
+double next_fudge_factor = 0.0;//3.6;//4;
 
 enum STATUS {FREQUENCY = 0, AMPLITUDE = 1, HEIGHT = 2, FUDGE_FACTOR = 3, STRAIGHT = 4} status;
 
@@ -392,12 +392,17 @@ void Walk::run() {
 		//		else {
 		//			sin_values[i] = (2 * exp(-9*(i - PI/2.0)) - 1);
 		//		}
-		Dynamixel::sendSyncWrite();
 	}
 
 	setLegLengths(0, LEG_CENTER);
 
-	char wait_key = (char)cvWaitKey(80);
+	printf("\rSet leg lengths");
+	Dynamixel::setSyncwriteStartAddress(30);
+	Dynamixel::setSyncwriteEachLength(4);
+	Dynamixel::sendSyncWrite();
+	char wait_key;
+	//= (char)cvWaitKey(80);
+	printf("\rWaited!");
 
 	double acc_x[samples];
 	double acc_y[samples];
@@ -428,12 +433,12 @@ void Walk::run() {
 		//		printf(" FAILED TO OPEN THE FILE\n\n");
 	}
 
-	setLegLengths(0, LEG_CENTER);
-	Dynamixel::sendSyncWrite();
-	while (Joystick::joy.buttons[Joystick::START_BUTTON] != BUTTON_PRESSED);
+//	setLegLengths(0, LEG_CENTER);
+//	Dynamixel::sendSyncWrite();
+//	while (Joystick::joy.buttons[Joystick::START_BUTTON] != BUTTON_PRESSED);
 
 	//	good_out << "Stp\tACC_X\tACC_Y\tACC_Z\tGYRO_X\tGYRO_Y\tGYRO_Z\tCMPS_X\tCMPS_Y\tCMPS_\n";
-
+	printf("\rEntering while loop");
 	while (wait_key != 'c' && Joystick::joy.buttons[Joystick::BACK_BUTTON] != BUTTON_PRESSED) {
 		if (testing) {
 			// Update Joystick events whenever they are read
@@ -630,8 +635,8 @@ void Walk::run() {
 
 
 
-				Dynamixel::setMotorPosition(13, ((double)Joystick::joy.axis[Joystick::RIGHT_Y] / (-30000.0)) - 0.5, 100, /*1.0/((double)frequency)*/-1);
-				Dynamixel::setMotorPosition(14, ((double)Joystick::joy.axis[Joystick::RIGHT_Y] / (-30000.0)) - 0.5, 100, /*1.0/((double)frequency)*/-1);
+//				Dynamixel::setMotorPosition(13, ((double)Joystick::joy.axis[Joystick::RIGHT_Y] / (-30000.0)) - 0.5, 100, /*1.0/((double)frequency)*/-1);
+//				Dynamixel::setMotorPosition(14, ((double)Joystick::joy.axis[Joystick::RIGHT_Y] / (-30000.0)) - 0.5, 100, /*1.0/((double)frequency)*/-1);
 
 
 
@@ -954,7 +959,7 @@ void Walk::run() {
 			Dynamixel::sendSyncWrite();
 		}
 
-		wait_key = (char)cvWaitKey(1);
+//		wait_key = (char)cvWaitKey(1);
 		//		Dynamixel::sendSyncWrite();
 
 	}

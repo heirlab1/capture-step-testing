@@ -22,6 +22,7 @@
 #include "IMUServer.h"
 #include "IMUData.h"
 #include "Joystick.h"
+#include "HandFollowDemo.h"
 
 //#define VISION
 
@@ -96,14 +97,14 @@ void init() {
 		//		Dynamixel::enableMotor(i);
 	}
 
-	Dynamixel::setMotorPosition(16, 0.0, 25, -1);
-	Dynamixel::setMotorPosition(15, 0.0, 25, -1);
-	Dynamixel::setMotorPosition(17, 0.0, 25, -1);
-	Dynamixel::setMotorPosition(18, 0.0, 25, -1);
+//	Dynamixel::setMotorPosition(16, 0.0, 25, -1);
+//	Dynamixel::setMotorPosition(15, 0.0, 25, -1);
+//	Dynamixel::setMotorPosition(17, 0.0, 25, -1);
+//	Dynamixel::setMotorPosition(18, 0.0, 25, -1);
 	Dynamixel::setMotorPosition(23, 0.0, 25, -1);
 	Dynamixel::setMotorPosition(24, 0.0, 25, -1);
-	Dynamixel::setMotorPosition(13, 0.0, -1, 0.5);
-	Dynamixel::setMotorPosition(14, 0.0, -1, 0.5);
+//	Dynamixel::setMotorPosition(13, 0.0, -1, 0.5);
+//	Dynamixel::setMotorPosition(14, 0.0, -1, 0.5);
 	Dynamixel::setSyncwriteEachLength(4);
 	Dynamixel::setSyncwriteStartAddress(30);
 	Dynamixel::sendSyncWrite();
@@ -122,9 +123,9 @@ int main() {
 
 	pthread_attr_init(&joystick_attr);
 
-	pthread_create(&joystick_server, &joystick_attr, Joystick::run, 0);
+//	pthread_create(&joystick_server, &joystick_attr, Joystick::run, 0);
 
-	while (Joystick::joy.buttons[Joystick::Y_BUTTON] != BUTTON_PRESSED);
+//	while (Joystick::joy.buttons[Joystick::Y_BUTTON] != BUTTON_PRESSED);
 
 	init();
 
@@ -132,6 +133,8 @@ int main() {
 
 	pthread_t walking;
 	pthread_attr_t attr;
+	pthread_t hand;
+	pthread_attr_t hand_attr;
 
 #ifdef VISION
 	pthread_t vision_thread;
@@ -147,20 +150,23 @@ int main() {
 	pthread_attr_init(&attr);
 	pthread_attr_init(&ball_attr);
 	pthread_attr_init(&imu_attr);
+	pthread_attr_init(&hand_attr);
 
 	// Busy wait
-	while (Joystick::joy.buttons[Joystick::X_BUTTON] != BUTTON_PRESSED);
+//	while (Joystick::joy.buttons[Joystick::X_BUTTON] != BUTTON_PRESSED);
 
 	pthread_create(&walking, &attr, walk_thread_function, 0);
+	pthread_create(&hand, &hand_attr, HandFollow::run, 0);
 #ifdef VISION
 
 	while (Joystick::joy.buttons[Joystick::START_BUTTON] != BUTTON_PRESSED);
 	pthread_create(&vision_thread, &vision_attr, vision, 0);
 #endif
-	pthread_create(&ball_follower, &ball_attr, follow, 0);
-	pthread_create(&imu_server, &imu_attr, IMU_Server::run, 0);
+//	pthread_create(&ball_follower, &ball_attr, follow, 0);
+//	pthread_create(&imu_server, &imu_attr, IMU_Server::run, 0);
 
 	pthread_join(walking, NULL);
+	pthread_join(hand, NULL);
 #ifdef VISION
 	pthread_cancel(vision_thread);
 
@@ -169,17 +175,17 @@ int main() {
 
 	printf("Joined Vision\n");
 
-	pthread_cancel(ball_follower);
+//	pthread_cancel(ball_follower);
 //	pthread_cancel(joystick_server);
 
 	printf("Ball Follower Cancelled\n");
 
 
-	pthread_join(ball_follower, NULL);
+//	pthread_join(ball_follower, NULL);
 
-	pthread_cancel(imu_server);
+//	pthread_cancel(imu_server);
 
-	pthread_join(imu_server, NULL);
+//	pthread_join(imu_server, NULL);
 
 	printf("Ball Follower Joined\n");
 

@@ -24,6 +24,7 @@ namespace Dynamixel {
 	bool sendSyncWrite();
 	void saveConfig();
 	void setInitialPose(int motor, int adjustment);
+	double getMotorPosition(int motor);
 }
 
 #endif /* DYNAMIXEL_H_ */

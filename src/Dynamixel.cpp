@@ -17,7 +17,7 @@
 #include <sstream>
 #include <pthread.h>
 #include "Motors.h"
-#include "mutexes.h"
+//#include "mutexes.h"
 
 #define P_GOAL_POSITION		30
 #define P_MOVING_SPEED		32
@@ -172,10 +172,19 @@ int Dynamixel::getZeroPose(int motor) {
 	else if (motor == 14) {
 		if (new_robot) {
 			return 2048;
+			// -
 		}
 		else {
 			return 2600;
 		}
+	}
+	else if (motor == 16) {
+		return 2020;
+		// -
+	}
+	else if (motor == 18) {
+		return 1170;
+		// +
 	}
 	else {
 		return dxl_read_word(motor, P_PRESENT_POSITION);
@@ -202,11 +211,12 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 		motor = 19;
 	}
 	else if (new_robot && motor == 24) {
-		motor == 20;
+		motor = 20;
 	}
 	// Convert angle to motor positions
 	int motor_positions = (int)(angle/(2.0*PI) * 4096.0);
 	int present_position = dxl_read_word(motor, P_PRESENT_POSITION);
+//	printf("Motor %d present position: %d\n", motor, present_position);
 	int goal_position = 0;
 //		std::cout << "Motor " << motor << ": " << motor_positions << std::endl;
 	int zero_position = getZeroPose(motor);
@@ -313,9 +323,9 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 		break;
 	default:
 		dxl_write_byte(motor, P_ENABLE, true);
-//		printf("Unlocking Mutex ... ");
+		printf("Unlocking Mutex ... ");
 		pthread_mutex_unlock(&mutex);
-//		printf("Mutex Unlocked\n");
+		printf("Mutex Unlocked\n");
 		return;
 	case 13:
 		goal_position = zero_position + motor_positions;
@@ -335,6 +345,16 @@ void Dynamixel::setMotorPosition(int motor, double angle, int speed = -1, double
 		break;
 	case 18:
 		break;*/
+	case 19:
+		goal_position = zero_position + motor_positions;
+		newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
+		newData.push_back(dxl_get_highbyte(zero_position + motor_positions));
+		break;
+	case 20:
+		goal_position = zero_position + motor_positions;
+		newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
+		newData.push_back(dxl_get_highbyte(zero_position + motor_positions));
+		break;
 	case 23:
 		goal_position = zero_position + motor_positions;
 		newData.push_back(dxl_get_lowbyte(zero_position + motor_positions));
@@ -400,7 +420,9 @@ bool Dynamixel::setSyncwriteEachLength(int eachLength) {
 }
 
 bool Dynamixel::sendSyncWrite() {
+//	printf("\r\nLocking mutex ...");
 	pthread_mutex_lock(&mutex);
+//	printf("\rMutex locked");
 	int idsLength= ids.size();
 
 	for (unsigned i = 0; i < data.size(); i++) {
@@ -446,11 +468,26 @@ bool Dynamixel::sendSyncWrite() {
 	ids.resize(0);
 	data.resize(0);
 
+//	printf("\rUnlocking Mutex ...");
 	pthread_mutex_unlock(&mutex);
+//	printf("\rMutex unlocked");
 
 	if (dxl_get_result( ) == COMM_TXSUCCESS) {
 		return true;
 	}
 	return false;
 
+}
+
+double Dynamixel::getMotorPosition(int motor) {
+	int motor_pos = dxl_read_word(motor, P_PRESENT_POSITION);
+//	printf("\rMotor position %d: %d", motor, motor_pos);
+	int delta_pos = motor_pos + getZeroPose(motor);
+	if (motor == 18) {
+		delta_pos = motor_pos - getZeroPose(motor);
+	} else if (motor == 16 || motor == 14) {
+		delta_pos = getZeroPose(motor) - motor_pos;
+	}
+	double theta = (delta_pos * 2.0 * PI / 4096.0);
+	return theta;
 }
