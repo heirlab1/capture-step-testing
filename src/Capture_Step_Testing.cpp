@@ -19,9 +19,11 @@
 #include "Motors.h"
 #include "Walk.h"
 #include "BallFollower.h"
-#include "IMUServer.h"
-#include "IMUData.h"
+//#include "IMUServer.h"
+//#include "IMUData.h"
 #include "Joystick.h"
+#include "CM904Server.h"
+#include "CM904.h"
 
 //#define VISION
 
@@ -124,7 +126,7 @@ int main() {
 
 	pthread_create(&joystick_server, &joystick_attr, Joystick::run, 0);
 
-	while (Joystick::joy.buttons[Joystick::Y_BUTTON] != BUTTON_PRESSED);
+//	while (Joystick::joy.buttons[Joystick::Y_BUTTON] != BUTTON_PRESSED);
 
 	init();
 
@@ -141,24 +143,29 @@ int main() {
 	pthread_t ball_follower;
 	pthread_attr_t ball_attr;
 
-	pthread_t imu_server;
-	pthread_attr_t imu_attr;
+//	pthread_t imu_server;
+//	pthread_attr_t imu_attr;
+
+	pthread_t cm904_server;
+	pthread_attr_t cm904_attr;
 
 	pthread_attr_init(&attr);
 	pthread_attr_init(&ball_attr);
-	pthread_attr_init(&imu_attr);
+//	pthread_attr_init(&imu_attr);
+	pthread_attr_init(&cm904_attr);
 
 	// Busy wait
-	while (Joystick::joy.buttons[Joystick::X_BUTTON] != BUTTON_PRESSED);
+//	while (Joystick::joy.buttons[Joystick::X_BUTTON] != BUTTON_PRESSED);
 
 	pthread_create(&walking, &attr, walk_thread_function, 0);
 #ifdef VISION
 
-	while (Joystick::joy.buttons[Joystick::START_BUTTON] != BUTTON_PRESSED);
+//	while (Joystick::joy.buttons[Joystick::START_BUTTON] != BUTTON_PRESSED);
 	pthread_create(&vision_thread, &vision_attr, vision, 0);
 #endif
 	pthread_create(&ball_follower, &ball_attr, follow, 0);
-	pthread_create(&imu_server, &imu_attr, IMU_Server::run, 0);
+//	pthread_create(&imu_server, &imu_attr, IMU_Server::run, 0);
+	pthread_create(&cm904_server, &cm904_attr, CM904Server::run, 0);
 
 	pthread_join(walking, NULL);
 #ifdef VISION
@@ -177,9 +184,11 @@ int main() {
 
 	pthread_join(ball_follower, NULL);
 
-	pthread_cancel(imu_server);
+//	pthread_cancel(imu_server);
+	pthread_cancel(cm904_server);
 
-	pthread_join(imu_server, NULL);
+//	pthread_join(imu_server, NULL);
+	pthread_join(cm904_server, NULL);
 
 	printf("Ball Follower Joined\n");
 

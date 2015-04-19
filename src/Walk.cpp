@@ -13,7 +13,8 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include <pthread.h>
-#include "IMUData.h"
+//#include "IMUData.h"
+#include "CM904Data.h"
 #include "Joystick.h"
 #include "mutexes.h"
 
@@ -430,7 +431,7 @@ void Walk::run() {
 
 	setLegLengths(0, LEG_CENTER);
 	Dynamixel::sendSyncWrite();
-	while (Joystick::joy.buttons[Joystick::START_BUTTON] != BUTTON_PRESSED);
+//	while (Joystick::joy.buttons[Joystick::START_BUTTON] != BUTTON_PRESSED);
 
 	//	good_out << "Stp\tACC_X\tACC_Y\tACC_Z\tGYRO_X\tGYRO_Y\tGYRO_Z\tCMPS_X\tCMPS_Y\tCMPS_\n";
 
@@ -452,18 +453,22 @@ void Walk::run() {
 				Dynamixel::setSyncwriteStartAddress(30);
 				std::vector<double> legValues = getLegThetas((double)(amplitude)*sin_values[current_sin_index]);
 
-				acc_x[current_sin_index] = IMU::get(IMU::ACCELEROMETER_X);
-				acc_y[current_sin_index] = IMU::get(IMU::ACCELEROMETER_Y);
-				acc_z[current_sin_index] = IMU::get(IMU::ACCELEROMETER_Z);
+				acc_x[current_sin_index] = CM904DATA::get(CM904DATA::ACCELEROMETER_X);
+				acc_y[current_sin_index] = CM904DATA::get(CM904DATA::ACCELEROMETER_Y);
+				acc_z[current_sin_index] = CM904DATA::get(CM904DATA::ACCELEROMETER_Z);
 
-				gyro_x[current_sin_index] = IMU::get(IMU::GYROSCOPE_X);
-				gyro_y[current_sin_index] = IMU::get(IMU::GYROSCOPE_Y);
-				gyro_z[current_sin_index] = IMU::get(IMU::GYROSCOPE_Z);
+				gyro_x[current_sin_index] = CM904DATA::get(CM904DATA::GYROSCOPE_X);
+				gyro_y[current_sin_index] = CM904DATA::get(CM904DATA::GYROSCOPE_Y);
+				gyro_z[current_sin_index] = CM904DATA::get(CM904DATA::GYROSCOPE_Z);
 
-				cmps_x[current_sin_index] = IMU::get(IMU::COMPASS_X);
-				cmps_y[current_sin_index] = IMU::get(IMU::COMPASS_Y);
-				cmps_z[current_sin_index] = IMU::get(IMU::COMPASS_Z);
+				cmps_x[current_sin_index] = CM904DATA::get(CM904DATA::COMPASS_X);
+				cmps_y[current_sin_index] = CM904DATA::get(CM904DATA::COMPASS_Y);
+				cmps_z[current_sin_index] = CM904DATA::get(CM904DATA::COMPASS_Z);
 
+//				printf("\rDatas: %f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
+//						acc_x[current_sin_index], acc_y[current_sin_index], acc_z[current_sin_index],
+//						gyro_x[current_sin_index], gyro_y[current_sin_index], gyro_z[current_sin_index],
+//						cmps_x[current_sin_index], cmps_y[current_sin_index], cmps_z[current_sin_index]);
 
 
 				if (Joystick::joy.buttons[Joystick::RIGHT_BUMPER] == BUTTON_PRESSED && last_buttons[Joystick::RIGHT_BUMPER] == BUTTON_RELEASED) {
