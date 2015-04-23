@@ -24,6 +24,7 @@
 #include "Joystick.h"
 #include "CM904Server.h"
 #include "CM904.h"
+#include "AndroidCommunication.h"
 
 //#define VISION
 
@@ -116,6 +117,33 @@ void init() {
 
 
 int main() {
+	pthread_t android;
+	pthread_attr_t android_attr;
+	pthread_attr_init(&android_attr);
+
+	pthread_create(&android, &android_attr, AndroidCommunication::run, 0);
+
+	while (1) {
+		std::string command = "";
+		while ((command = AndroidCommunication::getString()) == ""); // Busy wait until we have something from the Android
+		AndroidCommunication::resetString();
+		if (command == "walk") {
+			// Start walk threads
+			AndroidCommunication::sendString("toSay Walking");
+			printf("\rWalking\n");
+		} else if (command == "track hand") {
+			// Start track hand
+			AndroidCommunication::sendString("toSay Tracking Hand");
+			printf("\rTracking hand\n");
+		} else if (command == "follow ball") {
+			// Start ball following
+			AndroidCommunication::sendString("toSay Following Ball");
+			printf("\rFollowing ball\n");
+		} else {
+			String tosay = "toSay Sorry, I don't know how to " + command;
+			AndroidCommunication::sendString(tosay);
+		}
+	}
 
 
 
