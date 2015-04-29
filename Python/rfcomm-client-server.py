@@ -32,7 +32,8 @@ def rfcomm_client():
 
 
     uuid = "0c65fe91-9412-498e-b6e7-1fcd3d3d2237" #secure uuid android app
-    service_matches = bluetooth.find_service( uuid = uuid )
+    mac = "B6:6C:E8:0F:B7:43"
+    service_matches = bluetooth.find_service( uuid = uuid, address = mac )
 
     if len(service_matches) == 0:
         print "couldn't find the FooBar service"
