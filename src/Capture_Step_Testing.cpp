@@ -121,43 +121,10 @@ int main() {
 	pthread_attr_t android_attr;
 	pthread_attr_init(&android_attr);
 
-	pthread_create(&android, &android_attr, AndroidCommunication::run, 0);
-
-	while (1) {
-		std::string command = "";
-		while ((command = AndroidCommunication::getString()) == ""); // Busy wait until we have something from the Android
-		AndroidCommunication::resetString();
-		if (command == "walk") {
-			// Start walk threads
-			AndroidCommunication::sendString("toSay Walking");
-			printf("\rWalking\n");
-		} else if (command == "track hand") {
-			// Start track hand
-			AndroidCommunication::sendString("toSay Tracking Hand");
-			printf("\rTracking hand\n");
-		} else if (command == "follow ball") {
-			// Start ball following
-			AndroidCommunication::sendString("toSay Following Ball");
-			printf("\rFollowing ball\n");
-		} else {
-			String tosay = "toSay Sorry, I don't know how to " + command;
-			AndroidCommunication::sendString(tosay);
-		}
-	}
-
-
-
 	pthread_t joystick_server;
 	pthread_attr_t joystick_attr;
 
 	pthread_attr_init(&joystick_attr);
-
-	pthread_create(&joystick_server, &joystick_attr, Joystick::run, 0);
-
-//	while (Joystick::joy.buttons[Joystick::Y_BUTTON] != BUTTON_PRESSED);
-
-	init();
-
 	BallFollow::BallFollower ballFollower(walk);
 
 	pthread_t walking;
@@ -182,6 +149,71 @@ int main() {
 //	pthread_attr_init(&imu_attr);
 	pthread_attr_init(&cm904_attr);
 
+	pthread_create(&android, &android_attr, AndroidCommunication::run, 0);
+
+	while (1) {
+		std::string command = "";
+		while ((command = AndroidCommunication::getString()) == ""); // Busy wait until we have something from the Android
+		AndroidCommunication::resetString();
+		if (command == "walk") {
+			// Start walk threads
+			AndroidCommunication::sendString("toSay Walking");
+			printf("\rWalking\n");
+			init();
+			// Create threads
+			pthread_create(&walking, &attr, walk_thread_function, 0);
+			pthread_create(&cm904_server, &cm904_attr, CM904Server::run, 0);
+
+			// Join threads
+			pthread_join(walking, NULL);
+			pthread_cancel(cm904_server);
+			pthread_join(cm904_server, NULL);
+
+		} else if (command == "track hand") {
+			// Start track hand
+			AndroidCommunication::sendString("toSay Tracking Hand");
+			printf("\rTracking hand\n");
+			init();
+
+		} else if (command == "follow ball") {
+			// Start ball following
+			AndroidCommunication::sendString("toSay Following Ball");
+			printf("\rFollowing ball\n");
+			init();
+
+			// Create threads
+			pthread_create(&walking, &attr, walk_thread_function, 0);
+			pthread_create(&cm904_server, &cm904_attr, CM904Server::run, 0);
+			pthread_create(&ball_follower, &ball_attr, follow, 0);
+
+			// Join threads
+			pthread_join(walking, NULL);
+			pthread_cancel(cm904_server);
+			pthread_join(cm904_server, NULL);
+			pthread_cancel(ball_follower);
+			pthread_join(ball_follower, NULL);
+		} else if (command == "stand") {
+			AndroidCommunication::sendString("toSay Standing");
+			printf("Standing");
+			init();
+		} else {
+			String tosay = "toSay Sorry, I don't know how to " + command;
+			AndroidCommunication::sendString(tosay);
+		}
+	}
+
+
+
+
+
+	pthread_create(&joystick_server, &joystick_attr, Joystick::run, 0);
+
+//	while (Joystick::joy.buttons[Joystick::Y_BUTTON] != BUTTON_PRESSED);
+
+	init();
+
+
+
 	// Busy wait
 //	while (Joystick::joy.buttons[Joystick::X_BUTTON] != BUTTON_PRESSED);
 
@@ -192,7 +224,6 @@ int main() {
 	pthread_create(&vision_thread, &vision_attr, vision, 0);
 #endif
 	pthread_create(&ball_follower, &ball_attr, follow, 0);
-//	pthread_create(&imu_server, &imu_attr, IMU_Server::run, 0);
 	pthread_create(&cm904_server, &cm904_attr, CM904Server::run, 0);
 
 	pthread_join(walking, NULL);
