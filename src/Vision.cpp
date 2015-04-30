@@ -99,6 +99,34 @@ Point position;
 VideoCapture cap;
 double timer;
 
+/*Josh's stuff*/
+SimpleBlobDetector::Params params;
+Vec4f previous_found = Vec4f(0,0,0,0);
+/*Overlay Colors*/
+Scalar TextColor = Scalar(255,255,0);
+Scalar HighlightColor = Scalar(0,255,0);
+Scalar GridColor = Scalar(0,0,255);
+Scalar CircleColor = Scalar(255,0,0);
+Scalar CircleCenterColor = Scalar(0,255,0);
+
+int lowerT=225;
+int lowerS=50;
+int lowerM=0;
+int lowerX=54;
+
+int one = 10;
+int two = 10;
+int three = 1;
+float ratio_thresh_low = 0.01;
+float ratio_thresh_high = 0.08;
+
+int scale = 1;
+int delta = 0;
+int ddepth = CV_16S;
+
+int weight = 5;
+//DONE
+
 bool Vision::motorControllerIsExecuting = false;
 
 //MotorController Vision::motorController;
@@ -125,6 +153,7 @@ void Vision::init() {
 	cap = setup();
 	setwindowSettings();
 	calibrateThresholds();
+	initBlob();
 
 	// Initialize the arrays
 	for (int i = 0; i < history_size; i++) {
@@ -148,6 +177,7 @@ void Vision::init() {
 	angle_from_goal = DOUBLE_FLAG;
 	confidence_angle_from_goal = DOUBLE_FLAG;
 	position = Point(0, 0);
+
 }
 
 Vision::~Vision() {
@@ -437,6 +467,7 @@ std::vector<double> Vision::getLine(Point p1, Point p2) {
 //	std::cout << "M: " << arr[0] << "\tb: " << arr[1] << std::endl;
 	return arr;
 }
+
 double Vision::getDistance(Point p1, Point p2) {
 	double result;
 
@@ -1568,92 +1599,67 @@ double Vision::weightedAverageOf(double vec[], double confidence[], int size) {
 }
 
 Rect Vision::processBall(Mat frame) {
+		Rect centerRec = Rect(previous_found[0]-previous_found[2],previous_found[1]-previous_found[2],previous_found[2]*2,previous_found[2]*2);
 
-	// Initialize variables
-	int largest_area=90;
-	Rect boundRect;
-	boundRect.x = -1;
-	boundRect.y = -1;
+		/*INITILIZE THESE BELOW*/
+		// Set up detector with params
 
-	// Blur the image and convert to HSV Color coding
-	Mat imgHSV = frame.clone();
-	medianBlur(frame, imgHSV, kernel_size);
-	cvtColor(frame, imgHSV, CV_BGR2HSV); //Change the color format from BGR to HSV
+		/*INITILIZE THESE ABOVE*/
 
-//	double headAngle = motorController->getHeadDownAngle();
+		vector<KeyPoint> keypoints2;
+		Rect green_roi = findField(frame);
 
-//	// TODO For testing purposes only
-//		if (headAngle > 90 || headAngle < 0) {
-//			headAngle = 0;
-//		}
-//
-//		int maskPixelHeight = 160 - (8 * headAngle);
-//		if (maskPixelHeight < 0) {
-//			maskPixelHeight = 0;
-//		}
-//	//
-//	//	Mat mask(temp.rows, temp.cols, );
-//	//	mask.zeros(temp.rows, temp.cols, CV_8UC1);
-//	//
-//		Rect rect;
-//		rect.x = 0;
-//		rect.y = 0;
-//		rect.width = imgHSV.cols;
-//		rect.height = maskPixelHeight;
-//
-//		rectangle(imgHSV, rect, Scalar(0, 0, 0), -1, 8, 0);
-	// Get the thresholded image
-	Mat imgThresh;
-	inRange(imgHSV, Scalar(ballLowerH, ballLowerS, ballLowerV), Scalar(ballUpperH, ballUpperS, ballUpperV), imgThresh);
+		if(green_roi.area() > 1000 && (green_roi.x > 0 && green_roi.y > 0 && green_roi.width + green_roi.x < frame.cols && green_roi.height + green_roi.y < frame.rows))
+		{
+			int roi_x = green_roi.x;
+			int roi_y = green_roi.y;
 
+			Mat field_roi;
+			field_roi = frame(green_roi);
 
-	// Find the contours in the image
-	vector<vector <Point> > contours; // Vector for storing contour
-	vector<Vec4i> hierarchy;
-	findContours(imgThresh, contours, hierarchy,CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE ); // Find the contours in the image
+			GaussianBlur( field_roi, field_roi, Size(3, 3), 2, 2 );
 
-	// Find circular shapes in the image
-	std::vector<Vec3f> circles;
+			std::vector<Vec4f> circle_points;
+			circle_points.insert(circle_points.begin(), previous_found);
+			circle_points = sobelDetect(field_roi, circle_points);
+			circle_points = grayDetect(field_roi, circle_points);
+			circle_points = threshDetect(field_roi, circle_points);
+			circle_points = overlayDetect(field_roi, circle_points);
+			circle_points = contoursDetect(field_roi, circle_points);
 
-	HoughCircles( imgThresh, circles, CV_HOUGH_GRADIENT, 1, imgThresh.rows/8, 1000/*thresh1*/, 36/*thresh2*/, 1, 75 );
+			/*Mat points_array = Mat(circle_points);
+			Vec4f pt = points_array.at<Vec4f>();
+			std::cout << "Point: " << pt << std::endl;*/
+			double most_points = 0;
+			Point targetPt;
+			float radius = 0;
+			for(size_t i = 0; i < circle_points.size(); i++ ){
+				if(circle_points[i][3] > most_points){
+					targetPt.x = cvRound(circle_points[i][0]);
+					targetPt.y = cvRound(circle_points[i][1]);
+					radius = circle_points[i][2];
+					most_points = circle_points[i][3];
+				}
+			}
 
+			std::ostringstream convert;
+			convert << most_points;
+			if(most_points > 0.47){
+				checkLocation(frame, Point(targetPt.x+roi_x, targetPt.y+roi_y));
+				circle( field_roi, targetPt, radius, Scalar(0,255,0), 3, 8, 0);
+				putText(field_roi,  convert.str(), targetPt, CV_FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 2);
 
-	// Cycle through all the contours to find the contour with the largest area
-	for( unsigned i = 0; i< contours.size(); i++ ) // iterate through each contour.
-	{
-		double a=contourArea( contours[i],false);  //Find the area of contour
+				previous_found[0] = targetPt.x;
+				previous_found[1] = targetPt.y;
+				previous_found[2] = radius;
+				previous_found[3] = 0.16;
 
-		if(a>largest_area){
-			largest_area=a; //Reset largest area
-			//            largest_contour_index=i;  //Store the index of largest contour
-			boundRect=boundingRect(contours[i]); // Find the bounding rectangle for biggest contour
-
-			// For drawing image
-			//            drawContours(img, contours, i, Scalar(255,255,255), CV_FILLED, 8, hierarchy);
+				centerRec = Rect(targetPt.x - radius, targetPt.y - radius, radius*2,radius*2);
+			}
 		}
 
-	}
 
-	// FOR DRAWING IMAGE
-	// Draw circles on detected circles
-	for( size_t i = 0; i < circles.size(); i++ )
-	{
-		Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
-		int radius = cvRound(circles[i][2]);
-		// circle center
-		circle( frame, center, 3, Scalar(0,255,0), -1, 8, 0 );
-		// circle outline
-		circle( frame, center, radius, Scalar(0,0,255), 3, 8, 0 );
-	}
-
-	//    drawContours(img, contours, largest_contour_index, Scalar(0, 255, 255), CV_FILLED, 8, hierarchy);
-
-	Point centerRec = Point((boundRect.x + boundRect.width/2), (boundRect.y + boundRect.height/2));
-	circle(frame, cvPoint(centerRec.x, centerRec.y), boundRect.width/2, CV_RGB(255,0,0), -1, 8, 0 );
-	// END DRAWING IMAGE
-
-	// Return the bounding rectangle
-	return boundRect;
+		return centerRec;
 }
 
 void Vision::nextFrame() {
@@ -1880,9 +1886,7 @@ void Vision::center_goal(Mat frame) {
 
 void Vision::center_ball(Mat frame) {
 	// Get the bounding rectangle for the ball
-	Rect centerRec = processBall(frame);
-	centerRec.x += centerRec.width/2;
-	centerRec.y += centerRec.height/2;
+	Point centerRec = processBall(frame);
 	int centerX = centerRec.x;
 	int centerY = centerRec.y;
 
@@ -2217,4 +2221,288 @@ std::string Vision::getMotionRequest() {
 	}
 	return result;
 
+}
+
+//JOSH'S ADDED VISION CODE
+Rect Vision::findField(Mat frame){
+	Rect green_roi;
+	Mat frame_hsv, green_thresh;
+
+	cvtColor(frame, frame_hsv, COLOR_BGR2HSV);
+	inRange(frame_hsv, Scalar(34, 125, 37), Scalar(86, 256, 256), green_thresh);  //Green
+
+	std::vector<std::vector<Point> > contours;
+	std::vector<Vec4i> hierarchy;
+
+	int largest_green_area = 0;
+	findContours( green_thresh, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+	for ( size_t i=0; i<contours.size(); ++i )
+	{
+		Rect brect = boundingRect(contours[i]);
+		if(brect.area() > largest_green_area){
+			green_roi = boundingRect(contours[i]);
+			largest_green_area = brect.area();
+
+		}
+	}
+
+	return green_roi;
+}
+
+std::vector<Vec4f> Vision::sobelDetect(Mat frame, std::vector<Vec4f> circle_points){
+	Mat grad_x, grad_y, grad;
+	Mat abs_grad_x, abs_grad_y;
+	Mat field_roi_gray;
+
+	cvtColor(frame, field_roi_gray, COLOR_BGR2GRAY);
+
+	/// Gradient X
+	//Scharr( field_roi_gray, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
+	Sobel( field_roi_gray, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
+	convertScaleAbs( grad_x, abs_grad_x );
+
+	/// Gradient Y
+	//Scharr( field_roi_gray, grad_y, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
+	Sobel( field_roi_gray, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
+	convertScaleAbs( grad_y, abs_grad_y );
+
+	/// Total Gradient (approximate)
+	addWeighted( abs_grad_x, 1, abs_grad_y, 1, 0, grad );
+
+
+	vector<Vec3f> circles;
+	HoughCircles( grad, circles, CV_HOUGH_GRADIENT, 2, grad.rows/8, lowerT, lowerS, lowerM, lowerX);
+
+	for( size_t i = 0; i < circles.size(); i++ )
+	{
+		Vec4f circle_temp;
+		circle_temp[0] = circles[i][0];
+		circle_temp[1] = circles[i][1];
+		circle_temp[2] = circles[i][2];
+		circle_temp[3] = .2;
+		Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+		float radius = cvRound(circles[i][2]);
+		//circle( field_roi, center, 3, Scalar(0,255,0), -1, 8, 0 );
+		//circle( field_roi, center, radius, Scalar(255,0,0), 3, 8, 0 );
+		circle_points.insert(circle_points.begin(), circle_temp);
+		circle_temp.zeros();
+	}
+
+	return circle_points;
+}
+
+std::vector<Vec4f> Vision::grayDetect(Mat frame, std::vector<Vec4f> circle_points){
+	Mat field_roi_gray;
+
+	cvtColor(frame, field_roi_gray, COLOR_BGR2GRAY);
+
+	vector<Vec3f> circles2;
+	HoughCircles( field_roi_gray, circles2, CV_HOUGH_GRADIENT, 2, field_roi_gray.rows/8, lowerT, lowerS, lowerM, lowerX);
+	for( size_t i = 0; i < circles2.size(); i++ )
+	{
+		bool found = false;
+		for(size_t j = 0; j < circle_points.size(); j++ )
+		{
+			if(!found && (circles2[i][0]-weight < circle_points[j][0] && circle_points[j][0] < circles2[i][0]+weight) && (circles2[i][1]-weight < circle_points[j][1] && circle_points[j][1] < circles2[i][1]+weight)){
+				circle_points[j][3] = circle_points[j][3] + .16;
+				/*Point center(cvRound(circles2[i][0]), cvRound(circles2[i][1]));
+				circle( field_roi, center, circles2[i][2], Scalar(255,0,0), 3, 8, 0 );*/
+			}
+		}
+		if(!found){
+			Vec4f circle_temp;
+			circle_temp[0] = circles2[i][0];
+			circle_temp[1] = circles2[i][1];
+			circle_temp[2] = circles2[i][2];
+			circle_temp[3] = .16;
+			circle_points.insert(circle_points.begin(), circle_temp);
+			circle_temp.zeros();
+		}
+	}
+
+	return circle_points;
+}
+
+std::vector<Vec4f> Vision::threshDetect(Mat frame, std::vector<Vec4f> circle_points){
+	Mat field_hsv, field_thresh;
+
+	cvtColor(frame, field_hsv, COLOR_BGR2HSV);
+	inRange(field_hsv, Scalar(34, 125, 37), Scalar(86, 256, 256), field_thresh);  //Green
+	dilate(field_thresh, field_thresh, getStructuringElement(MORPH_ELLIPSE, Size(11, 11)));
+	erode(field_thresh, field_thresh, getStructuringElement(MORPH_ELLIPSE, Size(11, 11)));
+
+	vector<Vec3f> circles3;
+	HoughCircles( field_thresh, circles3, CV_HOUGH_GRADIENT, 2, field_thresh.rows/8, lowerT, lowerS, lowerM, lowerX);
+	for( size_t i = 0; i < circles3.size(); i++ )
+	{
+		bool found = false;
+		for(size_t j = 0; j < circle_points.size(); j++ )
+		{
+			if(!found && (circles3[i][0]-weight < circle_points[j][0] && circle_points[j][0] < circles3[i][0]+weight) && (circles3[i][1]-weight < circle_points[j][1] && circle_points[j][1] < circles3[i][1]+weight)){
+				circle_points[j][3] = circle_points[j][3] + .16;
+			}
+		}
+		if(!found){
+			Vec4f circle_temp;
+			circle_temp[0] = circles3[i][0];
+			circle_temp[1] = circles3[i][1];
+			circle_temp[2] = circles3[i][2];
+			circle_temp[3] = .16;
+			circle_points.insert(circle_points.begin(), circle_temp);
+			circle_temp.zeros();
+		}
+	}
+	return circle_points;
+}
+
+std::vector<Vec4f> Vision::overlayDetect(Mat frame, std::vector<Vec4f> circle_points){
+	Mat overlay, field_hsv, field_thresh;
+	vector<KeyPoint> keypoints;
+
+	cvtColor(frame, field_hsv, COLOR_BGR2HSV);
+	inRange(field_hsv, Scalar(34, 125, 37), Scalar(86, 256, 256), field_thresh);  //Green
+	dilate(field_thresh, field_thresh, getStructuringElement(MORPH_ELLIPSE, Size(11, 11)));
+	erode(field_thresh, field_thresh, getStructuringElement(MORPH_ELLIPSE, Size(11, 11)));
+
+	frame.copyTo(overlay,field_thresh);
+	blur(overlay,overlay,Size(7,7));
+	cvtColor(overlay, overlay, COLOR_BGR2GRAY);
+
+	SimpleBlobDetector detector(params);
+	detector.detect(overlay, keypoints);
+	for ( size_t i=0; i<keypoints.size(); ++i )
+	{
+		bool found = false;
+		for(size_t j = 0; j < circle_points.size(); j++ )
+		{
+			if(!found && (keypoints[i].pt.x-weight < circle_points[j][0] && circle_points[j][0] < keypoints[i].pt.x+weight) && (keypoints[i].pt.y-weight < circle_points[j][1] && circle_points[j][1] < keypoints[i].pt.y+weight)){
+				circle_points[j][3] = circle_points[j][3] + .16;
+			}
+		}
+		if(!found){
+			Vec4f circle_temp;
+			circle_temp[0] = keypoints[i].pt.x;
+			circle_temp[1] = keypoints[i].pt.y;
+			circle_temp[2] = keypoints[i].size;
+			circle_temp[3] = .16;
+			circle_points.insert(circle_points.begin(), circle_temp);
+			circle_temp.zeros();
+		}
+	}
+
+	return circle_points;
+}
+
+std::vector<Vec4f> Vision::contoursDetect(Mat frame, std::vector<Vec4f> circle_points){
+	Mat field_hsv, field_thresh;
+	Rect curr_roi;
+	std::vector<std::vector<Point> > contours2;
+	std::vector<Vec4i> hierarchy2;
+
+
+	cvtColor(frame, field_hsv, COLOR_BGR2HSV);
+	inRange(field_hsv, Scalar(34, 125, 37), Scalar(86, 256, 256), field_thresh);  //Green
+	dilate(field_thresh, field_thresh, getStructuringElement(MORPH_ELLIPSE, Size(11, 11)));
+	erode(field_thresh, field_thresh, getStructuringElement(MORPH_ELLIPSE, Size(11, 11)));
+
+	int largest_area_2 = 0;
+	findContours( field_thresh, contours2, hierarchy2, RETR_CCOMP, CHAIN_APPROX_SIMPLE);
+	for ( size_t i=0; i<contours2.size(); ++i )
+	{
+		Rect brect = boundingRect(contours2[i]);
+		Point center_rec = Point(brect.x+brect.width/2, brect.y+brect.height/2);
+
+		if(brect.area() > largest_area_2){
+			curr_roi = boundingRect(contours2[i]);
+			largest_area_2 = brect.area();
+		}
+
+		if(brect.area() > 50){
+			bool found = false;
+			for(size_t j = 0; j < circle_points.size(); j++ )
+			{
+				if(!found && (center_rec.x-weight < circle_points[j][0] && circle_points[j][0] < center_rec.x+weight) && (center_rec.y-weight < circle_points[j][1] && circle_points[j][1] < center_rec.y+weight)){
+					circle_points[j][3] = circle_points[j][3] + .16;
+				}
+
+			}
+			if(!found){
+				int avg_radius = (brect.width/2 + brect.height/2)/2;
+				Vec4f circle_temp;
+				circle_temp[0] = center_rec.x;
+				circle_temp[1] = center_rec.y;
+				circle_temp[2] = avg_radius;
+				circle_temp[3] = .16;
+				circle_points.insert(circle_points.begin(), circle_temp);
+				circle_temp.zeros();
+			}
+		}
+	}
+
+	return circle_points;
+}
+
+
+void Vision::placeGrid(Mat frame){
+	/*Horizontal*/
+	line(frame, Point(0, 160), Point(640, 160), GridColor, 2);
+	line(frame, Point(0, 320), Point(640, 320), GridColor, 2);
+
+	/*Vertical*/
+	line(frame, Point(214, 0), Point(214, 480), GridColor, 2);
+	line(frame, Point(428, 0), Point(428, 480), GridColor, 2);
+	return;
+}
+
+void Vision::checkLocation(Mat frame, Point center_rec){
+	std::string move_head = "Keep";
+	/*Left Column*/
+	if(center_rec.x < 214 && center_rec.y < 160 && center_rec.x > 0 && center_rec.y > 0){
+		move_head = "Left";
+		putText(frame, move_head, Point(0, 50), FONT_HERSHEY_PLAIN, 2, TextColor, 4);
+	}
+	else if(center_rec.x < 214 && center_rec.y < 320 && center_rec.x > 0 && center_rec.y > 160){
+		move_head = "Left";
+		putText(frame, move_head, Point(0, 50), FONT_HERSHEY_PLAIN, 2, TextColor, 4);
+	}
+	else if(center_rec.x < 214 && center_rec.y < 480 && center_rec.x > 0 && center_rec.y > 320){
+		move_head = "Left";
+		putText(frame, move_head, Point(0, 50), FONT_HERSHEY_PLAIN, 2, TextColor, 4);
+	}
+
+	/*Center Column*/
+	else if(center_rec.x <= 428 && center_rec.y <= 160 && center_rec.x >= 214 && center_rec.y >= 0){
+		move_head = "Up";
+		putText(frame, move_head, Point(0, 50), FONT_HERSHEY_PLAIN, 2, TextColor, 4);
+	}
+	else if(center_rec.x <= 428 && center_rec.y <= 320 && center_rec.x >= 214 && center_rec.y >= 160){
+		move_head = "Keep";
+		putText(frame, move_head, Point(0, 50), FONT_HERSHEY_PLAIN, 2, TextColor, 4);
+	}
+	else if(center_rec.x <= 428 && center_rec.y <= 480 && center_rec.x >= 214 && center_rec.y >= 320){
+		move_head = "Down";
+		putText(frame, move_head, Point(0, 50), FONT_HERSHEY_PLAIN, 2, TextColor, 4);
+	}
+
+	/*Right Column*/
+	else if(center_rec.x < 640 && center_rec.y < 160 && center_rec.x > 428 && center_rec.y > 0){
+		move_head =  "Right";
+		putText(frame, move_head, Point(0, 50), FONT_HERSHEY_PLAIN, 2, TextColor, 4);
+	}
+	else if(center_rec.x < 640 && center_rec.y < 320 && center_rec.x > 428 && center_rec.y > 160){
+		move_head =  "Right";
+		putText(frame, move_head, Point(0, 50), FONT_HERSHEY_PLAIN, 2, TextColor, 4);
+	}
+	else if(center_rec.x < 640 && center_rec.y < 480 && center_rec.x > 428 && center_rec.y > 320){
+		move_head =  "Right";
+		putText(frame, move_head, Point(0, 50), FONT_HERSHEY_PLAIN, 2, TextColor, 4);
+	}
+	return;
+}
+
+void Vision::initBlob(void){
+	// Filter by Circularity
+	params.filterByCircularity = true;
+	params.minCircularity = 0.8;
+	return;
 }

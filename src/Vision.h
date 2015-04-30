@@ -189,6 +189,20 @@ private:
 	void search_for_both(Mat);
 	void search_for_goal(Mat);
 	void search_for_ball(Mat);
+	Rect findField(Mat frame); //JOSH's STUFF
+	std::vector<Vec4f> sobelDetect(Mat frame, std::vector<Vec4f> circle_points);
+	std::vector<Vec4f> grayDetect(Mat frame, std::vector<Vec4f> circle_points);
+	std::vector<Vec4f> threshDetect(Mat frame, std::vector<Vec4f> circle_points);
+	std::vector<Vec4f> overlayDetect(Mat frame, std::vector<Vec4f> circle_points);
+	std::vector<Vec4f> contoursDetect(Mat frame, std::vector<Vec4f> circle_points);
+	void placeGrid(Mat frame);
+	void checkLocation(Mat frame, Point center_rec);
+	void initBlob(void);
+
+
+
+
+
 
 	static void executeMotion(Vision*);
 
